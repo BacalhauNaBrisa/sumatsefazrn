@@ -399,8 +399,9 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 
 .calendar{
 	display:grid;
-	grid-template-columns:repeat(7,1fr);
+	grid-template-columns:repeat(7,minmax(0,1fr));
 	gap:6px;
+	width:100%;
 }
 .calendar .dow{
 	text-align:center;
@@ -422,6 +423,8 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 	flex-direction:column;
 	justify-content:space-between;
 	min-height:64px;
+	min-width:0;
+	overflow:hidden;
 }
 .calendar .cell.empty{background:transparent; border:none;}
 .calendar .cell .daynum{
@@ -436,17 +439,33 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 	text-transform:uppercase;
 	letter-spacing:.03em;
 	align-self:flex-start;
+	max-width:100%;
 	padding:2px 6px;
 	border-radius:4px;
+	white-space:nowrap;
+	overflow:hidden;
 }
+.calendar .cell .status-abbr{display:none;}
 .calendar .cell.on{background:var(--danger-bg); border-color:#e2b9ab;}
 .calendar .cell.on .status{background:var(--danger); color:#fff;}
 .calendar .cell.off{background:var(--ok-bg); border-color:#bcdcc7;}
 .calendar .cell.off .status{background:var(--green-600); color:#fff;}
 .calendar .cell.neutral .status{background:#eceef1; color:#8b93a0;}
 @media (max-width:640px){
-	.calendar .cell{min-height:52px; padding:6px;}
-	.calendar .cell .status{font-size:8.5px; padding:1px 4px;}
+	.calendar{gap:4px;}
+	.calendar .cell{min-height:46px; padding:5px 3px; border-radius:6px;}
+	.calendar .cell .daynum{font-size:11.5px;}
+	.calendar .cell .status{font-size:9px; padding:1px 4px; border-radius:3px;}
+	.calendar .cell .status-full{display:none;}
+	.calendar .cell .status-abbr{display:inline;}
+}
+@media (max-width:380px){
+	.calendar .cell .daynum{font-size:10.5px;}
+	.calendar .cell .status{font-size:8px; padding:1px 3px;}
+}
+@media (max-width:640px){
+	.wrap{padding-left:12px; padding-right:12px;}
+	.card{padding:16px 12px;}
 }
 
 /* ---------- workday detail cards ---------- */
@@ -791,7 +810,7 @@ function buildCalendarShell(){
 	for(var d=1; d<=DAYS_IN_MONTH; d++){
 		var $cell = $('<div>').addClass('cell neutral').attr('data-day', d);
 		$cell.append('<span class="daynum">'+d+'</span>');
-		$cell.append('<span class="status">—</span>');
+		$cell.append('<span class="status"><span class="status-full">—</span><span class="status-abbr">—</span></span>');
 		$cell.on('click', function(){
 			var d2 = parseInt($(this).attr('data-day'),10);
 			selectDay(selectedDay === d2 ? null : d2);
@@ -825,17 +844,18 @@ function renderCalendar(){
 
 	$('#calendarGrid .cell[data-day]').each(function(){
 		var d = parseInt($(this).attr('data-day'),10);
-		var $status = $(this).find('.status');
+		var $full = $(this).find('.status-full');
+		var $abbr = $(this).find('.status-abbr');
 		$(this).removeClass('on off neutral');
 		if(!selectedName){
 			$(this).addClass('neutral');
-			$status.text('—');
+			$full.text('—'); $abbr.text('—');
 		} else if(DAY_SET_BY_NAME[selectedName][d]){
 			$(this).addClass('on');
-			$status.text('Plantão');
+			$full.text('Plantão'); $abbr.text('P');
 		} else {
 			$(this).addClass('off');
-			$status.text('Folga');
+			$full.text('Folga'); $abbr.text('F');
 		}
 		$(this).toggleClass('day-picked', selectedDay === d);
 	});
