@@ -187,6 +187,36 @@ a{color:var(--navy-700);}
 }
 .search-box input:focus{outline:2px solid var(--navy-700); outline-offset:1px;}
 
+.search-box select{
+	width:100%;
+	padding:9px 12px;
+	border:1px solid var(--line);
+	border-radius:8px;
+	font-family:'Inter',sans-serif;
+	font-size:13px;
+	background:#fff;
+	color:var(--ink-900);
+	cursor:pointer;
+}
+.search-box select:focus{outline:2px solid var(--navy-700); outline-offset:1px;}
+
+.clear-btn{
+	font-size:11.5px;
+	font-weight:600;
+	color:var(--navy-700);
+	background:#fff;
+	border:1px solid var(--line);
+	border-radius:6px;
+	padding:7px 12px;
+	cursor:pointer;
+}
+.clear-btn:hover{background:var(--cream-50);}
+
+.calendar .cell[data-day]{cursor:pointer; transition:box-shadow .12s;}
+.calendar .cell[data-day]:hover{box-shadow:0 0 0 2px var(--navy-700) inset;}
+.calendar .cell.day-picked{box-shadow:0 0 0 2.5px var(--gold-500) inset;}
+#clearDayBtn{margin-left:auto;}
+
 /* ---------- matrix table ---------- */
 .matrix-scroll{
 	overflow-x:auto;
@@ -435,7 +465,7 @@ footer a{color:var(--ink-600);}
 		<div>
 			<div class="eyebrow">SUMAT · Sefaz/RN · não-oficial</div>
 			<h1>Escalas da SUMAT da Sefaz/RN</h1>
-			<p>Visualizador não-oficial da escala de plantões de 12h dos novos Auditores Fiscais de Receitas Estaduais (AFRE), lotados na Subcoordenadoria de Malha e Auditoria Tributária (SUMAT).</p>
+			<p>Visualizador não-oficial da escala de plantões de 12h dos novos Auditores Fiscais de Receitas Estaduais (AFRE), lotados na Subcoordenadoria de Fiscalização de Mercadorias em Trânsito (SUMAT).</p>
 		</div>
 	</div>
 </div>
@@ -480,7 +510,30 @@ footer a{color:var(--ink-600);}
 	<div class="card">
 		<h2>Calendário — Setembro/2026</h2>
 		<div class="cal-head-name empty" id="calHeadName">Nenhum auditor selecionado — selecione um nome na lista acima para colorir o calendário.</div>
+		<p class="lead" style="margin-top:-6px;">Dica: clique diretamente em um dia do calendário abaixo para ver, no quadro seguinte, todos os auditores fiscais de plantão naquela data.</p>
 		<div class="calendar" id="calendarGrid"></div>
+	</div>
+
+	<!-- ===================== QUEM TRABALHA EM UM DIA ESPECÍFICO ===================== -->
+	<div class="card" id="dayLookupCard">
+		<h2>Quem está de plantão em um dia específico</h2>
+		<p class="lead">Escolha um dia de setembro/2026 (ou clique num dia do calendário acima) para ver todos os auditores fiscais escalados naquela data.</p>
+
+		<div class="filters-row">
+			<div class="search-box" style="max-width:220px;">
+				<select id="daySelect">
+					<option value="">Selecione um dia…</option>
+				</select>
+			</div>
+			<button class="clear-btn" id="clearDayBtn" style="display:none;">Limpar seleção</button>
+		</div>
+
+		<div id="dayLookupContent">
+			<div class="empty-state">
+				<div class="big">Nenhum dia selecionado</div>
+				Escolha um dia acima para ver quem estará de plantão.
+			</div>
+		</div>
 	</div>
 
 	<!-- ===================== QUADRO DE PLANTÕES DO SELECIONADO ===================== -->
@@ -582,7 +635,9 @@ SCHEDULE.forEach(function(p){
 });
 
 var DOW_LABELS = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
+var DOW_LABELS_LONG = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
 var selectedName = null;
+var selectedDay = null;
 
 /* ---------------- matriz ---------------- */
 function buildMatrixHead(){
@@ -632,8 +687,24 @@ function buildCalendarShell(){
 		var $cell = $('<div>').addClass('cell neutral').attr('data-day', d);
 		$cell.append('<span class="daynum">'+d+'</span>');
 		$cell.append('<span class="status">—</span>');
+		$cell.on('click', function(){
+			var d2 = parseInt($(this).attr('data-day'),10);
+			selectDay(selectedDay === d2 ? null : d2);
+		});
 		$grid.append($cell);
 	}
+}
+
+function buildDaySelect(){
+	var $sel = $('#daySelect');
+	for(var d=1; d<=DAYS_IN_MONTH; d++){
+		var wd = new Date(YEAR, MONTH-1, d).getDay();
+		$sel.append('<option value="'+d+'">Dia '+d+' ('+DOW_LABELS[wd]+')</option>');
+	}
+	$sel.on('change', function(){
+		var v = $(this).val();
+		selectDay(v ? parseInt(v,10) : null);
+	});
 }
 
 function renderCalendar(){
@@ -661,6 +732,7 @@ function renderCalendar(){
 			$(this).addClass('off');
 			$status.text('Folga');
 		}
+		$(this).toggleClass('day-picked', selectedDay === d);
 	});
 }
 
@@ -706,7 +778,56 @@ function renderWorkdaysCard(){
 	$content.append($grid);
 }
 
+/* ---------------- quem trabalha em um dia específico ---------------- */
+function renderDayLookup(){
+	var $content = $('#dayLookupContent').empty();
+	$('#clearDayBtn').toggle(!!selectedDay);
+
+	if(!selectedDay){
+		$content.append(
+			'<div class="empty-state"><div class="big">Nenhum dia selecionado</div>'+
+			'Escolha um dia acima para ver quem estará de plantão.</div>'
+		);
+		return;
+	}
+
+	var wd = new Date(YEAR, MONTH-1, selectedDay).getDay();
+	var onDuty = SCHEDULE.filter(function(p){
+		return !!DAY_SET_BY_NAME[p.name][selectedDay];
+	}).map(function(p){ return p.name; }).sort(function(a,b){return a.localeCompare(b,'pt-BR');});
+
+	var $card = $('<div class="workday-card" style="max-width:420px;">');
+	var $date = $('<div class="wd-date">')
+		.append('<span>'+selectedDay+' de setembro <span style="font-weight:400;opacity:.85">('+DOW_LABELS_LONG[wd]+')</span></span>')
+		.append('<span class="badges"><span class="mini-badge" title="Turno ainda não cadastrado">turno ?</span><span class="mini-badge" title="Local ainda não cadastrado">local ?</span></span>');
+	var $body = $('<div class="wd-body">');
+	$body.append('<div class="wd-others-label">'+onDuty.length+' auditor(es) fiscal(is) de plantão nesse dia</div>');
+	var $ul = $('<ul class="wd-others">');
+	if(onDuty.length===0){
+		$ul.append('<li class="none">Nenhum auditor de plantão nesse dia.</li>');
+	} else {
+		onDuty.forEach(function(n){
+			var li = $('<li>').text(n);
+			if(n === selectedName){ li.css('font-weight','700'); }
+			$ul.append(li);
+		});
+	}
+	$body.append($ul);
+	$card.append($date).append($body);
+	$content.append($card);
+}
+
 /* ---------------- seleção ---------------- */
+function selectDay(day){
+	selectedDay = day;
+	$('#daySelect').val(day ? String(day) : '');
+	renderCalendar();
+	renderDayLookup();
+	if(day){
+		document.getElementById('dayLookupCard').scrollIntoView({behavior:'smooth', block:'nearest'});
+	}
+}
+
 function selectName(name){
 	selectedName = name;
 	$('#matrixBody tr').removeClass('selected');
@@ -725,14 +846,17 @@ function cssEscape(s){
 }
 
 $(document).on('click', '#clearSelBtn', function(){ selectName(null); });
+$('#clearDayBtn').on('click', function(){ selectDay(null); });
 $('#searchInput').on('input', applySearchFilter);
 
 /* ---------------- init ---------------- */
 buildMatrixHead();
 buildMatrixBody();
 buildCalendarShell();
+buildDaySelect();
 renderCalendar();
 renderWorkdaysCard();
+renderDayLookup();
 
 });
 </script>

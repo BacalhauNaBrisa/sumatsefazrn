@@ -6,7 +6,7 @@
 
 <p align="center">
   Visualizador não-oficial da escala de plantões dos novos<br/>
-  <strong>Auditores Fiscais de Receitas Estaduais (AFRE)</strong> lotados na SUMAT (Subcoordenadoria de Malha e Auditoria Tributária) da Secretaria de Estado da Tributação do Rio Grande do Norte (Sefaz/RN).
+  <strong>Auditores Fiscais de Receitas Estaduais (AFRE)</strong> lotados na SUMAT (Subcoordenadoria de Fiscalização de Mercadorias em Trânsito) da Secretaria da Fazenda do Rio Grande do Norte (Sefaz/RN).
 </p>
 
 <p align="center">
@@ -25,8 +25,11 @@ O projeto é uma ferramenta de consulta pessoal, sem qualquer vínculo instituci
 
 1. Na listagem superior, **clique no nome** de um auditor fiscal para selecioná-lo (apenas um por vez; clique novamente para desmarcar). Use o campo de busca para localizar um nome rapidamente.
 2. Com um nome selecionado, o **calendário de setembro/2026** é colorido automaticamente: vermelho nos dias de plantão, verde nos dias de folga.
-3. Abaixo do calendário, o **quadro de plantões** lista cada dia de trabalho do auditor selecionado e, para cada data, quais outros auditores da SUMAT também estarão de plantão naquele mesmo dia.
-4. Sem nenhuma seleção, a listagem superior já mostra, para todos os 47 auditores, quais dias do mês são de plantão (vermelho) e quais são de folga (verde).
+3. Logo abaixo do calendário, é possível **escolher um dia específico** do mês — pelo seletor "Quem está de plantão em um dia específico" ou clicando diretamente numa data do calendário — para ver, num só quadro, todos os auditores fiscais escalados naquele dia.
+4. Mais abaixo, o **quadro de plantões do auditor selecionado** lista cada dia de trabalho do auditor escolhido na listagem e, para cada data, quais outros auditores da SUMAT também estarão de plantão naquele mesmo dia.
+5. Sem nenhuma seleção, a listagem superior já mostra, para todos os 47 auditores, quais dias do mês são de plantão (vermelho) e quais são de folga (verde).
+
+As duas formas de seleção — por auditor e por dia — são independentes e podem ser usadas juntas ou separadamente.
 
 ## Dados exibidos
 
