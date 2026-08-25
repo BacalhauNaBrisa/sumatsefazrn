@@ -290,6 +290,84 @@ td.off .dotcell{background:var(--green-600); opacity:.28;}
 table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 .row-count{font-size:11.5px; color:var(--ink-400); margin-top:10px;}
 
+/* ---------- mobile: hint + cartões (substituem a tabela em telas estreitas) ---------- */
+.mobile-hint{display:none;}
+#mobileMatrixList{display:none;}
+
+@media (max-width:640px){
+	html,body{overflow-x:hidden;}
+	.matrix-scroll{display:none;}
+	.mobile-hint{
+		display:block;
+		font-size:12px;
+		color:var(--ink-400);
+		text-align:center;
+		margin-bottom:10px;
+	}
+	#mobileMatrixList{
+		display:flex;
+		flex-direction:column;
+		gap:10px;
+	}
+	.mp-card{
+		border:1px solid var(--line);
+		border-radius:9px;
+		background:#fff;
+		padding:12px 12px 10px;
+		cursor:pointer;
+		transition:box-shadow .12s, border-color .12s;
+	}
+	.mp-card.selected{
+		border-color:var(--gold-600);
+		box-shadow:0 0 0 2px var(--gold-500);
+		background:#fffdf5;
+	}
+	.mp-card.dimmed{display:none;}
+	.mp-head{
+		display:flex;
+		align-items:center;
+		justify-content:space-between;
+		gap:8px;
+		margin-bottom:9px;
+	}
+	.mp-name{
+		font-weight:600;
+		font-size:13.5px;
+		color:var(--ink-900);
+		line-height:1.3;
+	}
+	.mp-count{
+		font-family:'JetBrains Mono',monospace;
+		font-size:10.5px;
+		font-weight:600;
+		color:var(--danger-fg);
+		background:var(--danger-bg);
+		border-radius:20px;
+		padding:2px 8px;
+		white-space:nowrap;
+		flex-shrink:0;
+	}
+	.mp-days{
+		display:grid;
+		grid-template-columns:repeat(6,1fr);
+		gap:4px;
+	}
+	.mp-day{
+		aspect-ratio:1/1;
+		border-radius:5px;
+		display:flex;
+		align-items:center;
+		justify-content:center;
+		font-family:'JetBrains Mono',monospace;
+		font-size:10.5px;
+		font-weight:700;
+	}
+	.mp-day.on{background:var(--danger); color:#fff;}
+	.mp-day.off{background:var(--green-600); color:#fff; opacity:.35;}
+	.mp-card.selected .mp-day.on{box-shadow:inset 0 0 0 1.5px var(--gold-600);}
+	.mp-card.selected .mp-day.off{box-shadow:inset 0 0 0 1.5px var(--gold-600); opacity:.55;}
+}
+
 /* ---------- calendar ---------- */
 .cal-head-name{
 	font-family:'Space Grotesk',sans-serif;
@@ -503,6 +581,8 @@ footer a{color:var(--ink-600);}
 				<tbody id="matrixBody"></tbody>
 			</table>
 		</div>
+		<div class="mobile-hint">👆 toque num nome para selecioná-lo</div>
+		<div id="mobileMatrixList"></div>
 		<div class="row-count" id="rowCount"></div>
 	</div>
 
@@ -669,9 +749,34 @@ function buildMatrixBody(){
 	$('#rowCount').text(SCHEDULE.length + ' auditores fiscais listados.');
 }
 
+function buildMobileMatrix(){
+	var $list = $('#mobileMatrixList').empty();
+	SCHEDULE.forEach(function(p){
+		var $card = $('<div class="mp-card">').attr('data-name', p.name);
+		var $head = $('<div class="mp-head">')
+			.append('<span class="mp-name">'+p.name+'</span>')
+			.append('<span class="mp-count">'+p.shifts.length+' plantões</span>');
+		var $days = $('<div class="mp-days">');
+		for(var d=1; d<=DAYS_IN_MONTH; d++){
+			var on = !!DAY_SET_BY_NAME[p.name][d];
+			$days.append('<span class="mp-day '+(on?'on':'off')+'">'+d+'</span>');
+		}
+		$card.append($head).append($days);
+		$card.on('click', function(){
+			var name = $(this).data('name');
+			selectName(selectedName === name ? null : name);
+		});
+		$list.append($card);
+	});
+}
+
 function applySearchFilter(){
 	var q = $('#searchInput').val().toLowerCase().trim();
 	$('#matrixBody tr').each(function(){
+		var name = ($(this).data('name')+'').toLowerCase();
+		$(this).toggleClass('dimmed', q.length>0 && name.indexOf(q)===-1);
+	});
+	$('#mobileMatrixList .mp-card').each(function(){
 		var name = ($(this).data('name')+'').toLowerCase();
 		$(this).toggleClass('dimmed', q.length>0 && name.indexOf(q)===-1);
 	});
@@ -831,8 +936,10 @@ function selectDay(day){
 function selectName(name){
 	selectedName = name;
 	$('#matrixBody tr').removeClass('selected');
+	$('#mobileMatrixList .mp-card').removeClass('selected');
 	if(name){
 		$('#matrixBody tr[data-name="'+cssEscape(name)+'"]').addClass('selected');
+		$('#mobileMatrixList .mp-card[data-name="'+cssEscape(name)+'"]').addClass('selected');
 	}
 	renderCalendar();
 	renderWorkdaysCard();
@@ -852,6 +959,7 @@ $('#searchInput').on('input', applySearchFilter);
 /* ---------------- init ---------------- */
 buildMatrixHead();
 buildMatrixBody();
+buildMobileMatrix();
 buildCalendarShell();
 buildDaySelect();
 renderCalendar();
