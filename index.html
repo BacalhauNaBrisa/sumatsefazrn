@@ -274,6 +274,16 @@ table.matrix tbody tr.selected th{background:var(--gold-500); color:var(--navy-9
 table.matrix tbody tr.selected td.on{background:var(--danger); box-shadow:inset 0 0 0 1.5px var(--gold-600);}
 table.matrix tbody tr.selected td.off{background:var(--green-600); box-shadow:inset 0 0 0 1.5px var(--gold-600);}
 table.matrix tbody tr.dimmed{opacity:.32;}
+table.matrix tbody tr.cmp-selected th{background:#dbe7f5; box-shadow:inset 3px 0 0 var(--navy-700);}
+table.matrix tbody tr.cmp-selected.selected th{background:var(--gold-500); box-shadow:inset 3px 0 0 var(--navy-700);}
+.cmp-checkbox{
+	vertical-align:middle;
+	margin-right:7px;
+	width:14px; height:14px;
+	accent-color:var(--navy-700);
+	cursor:pointer;
+}
+.cmp-checkbox:disabled{cursor:not-allowed; opacity:.35;}
 table.matrix td{
 	text-align:center;
 	padding:6px 2px;
@@ -322,6 +332,13 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 		box-shadow:0 0 0 2px var(--gold-500);
 		background:#fffdf5;
 	}
+	.mp-card.cmp-selected{
+		border-color:var(--navy-700);
+		box-shadow:0 0 0 2px var(--navy-700);
+	}
+	.mp-card.cmp-selected.selected{
+		box-shadow:0 0 0 2px var(--gold-500), 0 0 0 4px var(--navy-700);
+	}
 	.mp-card.dimmed{display:none;}
 	.mp-head{
 		display:flex;
@@ -330,6 +347,7 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 		gap:8px;
 		margin-bottom:9px;
 	}
+	.mp-name-wrap{display:flex; align-items:center; gap:7px; min-width:0;}
 	.mp-name{
 		font-weight:600;
 		font-size:13.5px;
@@ -533,6 +551,113 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 }
 .workday-card .wd-others .none{font-style:italic; color:var(--ink-400);}
 
+/* ---------- quadro de vínculos entre auditores ---------- */
+.links-base-line{
+	font-size:13px;
+	color:var(--navy-900);
+	margin-bottom:16px;
+}
+.links-base-line strong{color:var(--navy-950);}
+.links-grid{
+	display:flex;
+	flex-direction:column;
+	gap:16px;
+}
+.link-block{
+	border:1px solid var(--line);
+	border-radius:10px;
+	overflow:hidden;
+	background:#fff;
+}
+.link-block .lb-head{
+	background:var(--navy-950);
+	color:#f4f1e6;
+	padding:10px 14px;
+	display:flex;
+	align-items:center;
+	justify-content:space-between;
+	gap:10px;
+	flex-wrap:wrap;
+}
+.link-block .lb-title{
+	font-family:'Space Grotesk',sans-serif;
+	font-weight:600;
+	font-size:13.5px;
+}
+.link-block .lb-title .vs{color:var(--gold-500); font-weight:700; margin:0 5px;}
+.link-block .lb-remove{
+	font-size:11px;
+	font-weight:600;
+	color:#f4f1e6;
+	background:rgba(255,255,255,.12);
+	border:1px solid rgba(255,255,255,.3);
+	border-radius:6px;
+	padding:3px 9px;
+	cursor:pointer;
+}
+.link-block .lb-remove:hover{background:rgba(255,255,255,.22);}
+.link-block .lb-strip{
+	display:grid;
+	grid-template-columns:repeat(30,minmax(0,1fr));
+	gap:2px;
+	padding:12px 14px 4px;
+}
+.link-block .lb-dot{
+	aspect-ratio:1/1;
+	border-radius:3px;
+	font-family:'JetBrains Mono',monospace;
+	font-size:8px;
+	font-weight:700;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	color:#fff;
+	min-width:0;
+	overflow:hidden;
+}
+@media (max-width:640px){
+	.link-block .lb-strip{grid-template-columns:repeat(10,minmax(0,1fr)); gap:3px; padding:10px 10px 2px;}
+	.link-block .lb-dot{font-size:8.5px;}
+}
+.link-block .lb-dot.both{background:var(--gold-600);}
+.link-block .lb-dot.base-only{background:var(--danger);}
+.link-block .lb-dot.comp-only{background:var(--navy-700);}
+.link-block .lb-dot.none{background:#e4e7eb; color:#aab1bd;}
+.link-block .lb-stats{
+	display:grid;
+	grid-template-columns:repeat(3,1fr);
+	gap:10px;
+	padding:10px 14px 14px;
+}
+@media (max-width:700px){
+	.link-block .lb-stats{grid-template-columns:1fr;}
+}
+.link-block .lb-stat h4{
+	margin:0 0 5px;
+	font-size:10.5px;
+	text-transform:uppercase;
+	letter-spacing:.04em;
+	font-weight:700;
+	display:flex;
+	align-items:center;
+	gap:6px;
+}
+.link-block .lb-stat h4 .sw{width:10px; height:10px; border-radius:3px; display:inline-block;}
+.link-block .lb-stat.both h4{color:var(--gold-600);}
+.link-block .lb-stat.both h4 .sw{background:var(--gold-600);}
+.link-block .lb-stat.baseonly h4{color:var(--danger-fg);}
+.link-block .lb-stat.baseonly h4 .sw{background:var(--danger);}
+.link-block .lb-stat.componly h4{color:var(--navy-800);}
+.link-block .lb-stat.componly h4 .sw{background:var(--navy-700);}
+.link-block .lb-stat p{
+	margin:0;
+	font-size:12px;
+	color:var(--ink-600);
+	font-family:'JetBrains Mono',monospace;
+}
+.link-block .lb-stat p.none-days{font-style:italic; font-family:'Inter',sans-serif; color:var(--ink-400);}
+.links-legend{display:flex; flex-wrap:wrap; gap:14px; margin-bottom:18px;}
+
 /* ---------- empty state ---------- */
 .empty-state{
 	text-align:center;
@@ -647,6 +772,18 @@ footer a{color:var(--ink-600);}
 		</div>
 	</div>
 
+	<!-- ===================== VÍNCULOS COM OUTROS AUDITORES ===================== -->
+	<div class="card" id="linksCard">
+		<h2>Vínculos com outros auditores</h2>
+		<p class="lead">Com um auditor <strong>base</strong> selecionado na listagem, marque a caixa ao lado de outros nomes (quantos quiser) para comparar plantões: em quais dias trabalham juntos e em quais dias não coincidem.</p>
+		<div id="linksContent">
+			<div class="empty-state">
+				<div class="big">Nenhum auditor base selecionado</div>
+				Selecione um nome na listagem acima para habilitar a comparação com outros auditores.
+			</div>
+		</div>
+	</div>
+
 </div>
 
 <footer>
@@ -737,6 +874,7 @@ var DOW_LABELS = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
 var DOW_LABELS_LONG = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
 var selectedName = null;
 var selectedDay = null;
+var comparisonNames = [];
 
 /* ---------------- matriz ---------------- */
 function buildMatrixHead(){
@@ -753,7 +891,15 @@ function buildMatrixBody(){
 	var $body = $('#matrixBody').empty();
 	SCHEDULE.forEach(function(p){
 		var $tr = $('<tr>').attr('data-name', p.name);
-		$tr.append($('<th>').text(p.name));
+		var $th = $('<th>');
+		var $cb = $('<input type="checkbox" class="cmp-checkbox" disabled/>')
+			.attr('title','Comparar com o auditor base selecionado')
+			.on('click', function(e){ e.stopPropagation(); })
+			.on('change', function(){
+				toggleComparison(p.name, $(this).is(':checked'));
+			});
+		$th.append($cb).append($('<span>').text(p.name));
+		$tr.append($th);
 		for(var d=1; d<=DAYS_IN_MONTH; d++){
 			var on = !!DAY_SET_BY_NAME[p.name][d];
 			var $td = $('<td>').addClass(on?'on':'off').append('<span class="dotcell"></span>');
@@ -772,8 +918,15 @@ function buildMobileMatrix(){
 	var $list = $('#mobileMatrixList').empty();
 	SCHEDULE.forEach(function(p){
 		var $card = $('<div class="mp-card">').attr('data-name', p.name);
+		var $cb = $('<input type="checkbox" class="cmp-checkbox" disabled/>')
+			.attr('title','Comparar com o auditor base selecionado')
+			.on('click', function(e){ e.stopPropagation(); })
+			.on('change', function(){
+				toggleComparison(p.name, $(this).is(':checked'));
+			});
+		var $nameWrap = $('<span class="mp-name-wrap">').append($cb).append('<span class="mp-name">'+p.name+'</span>');
 		var $head = $('<div class="mp-head">')
-			.append('<span class="mp-name">'+p.name+'</span>')
+			.append($nameWrap)
 			.append('<span class="mp-count">'+p.shifts.length+' plantões</span>');
 		var $days = $('<div class="mp-days">');
 		for(var d=1; d<=DAYS_IN_MONTH; d++){
@@ -955,17 +1108,136 @@ function selectDay(day){
 
 function selectName(name){
 	selectedName = name;
-	$('#matrixBody tr').removeClass('selected');
-	$('#mobileMatrixList .mp-card').removeClass('selected');
+	comparisonNames = [];
+	$('#matrixBody tr').removeClass('selected cmp-selected');
+	$('#mobileMatrixList .mp-card').removeClass('selected cmp-selected');
 	if(name){
 		$('#matrixBody tr[data-name="'+cssEscape(name)+'"]').addClass('selected');
 		$('#mobileMatrixList .mp-card[data-name="'+cssEscape(name)+'"]').addClass('selected');
 	}
+
+	/* habilita/desabilita as caixas de comparação: só ficam ativas
+	   quando há um auditor base selecionado, e nunca na própria linha base */
+	$('.cmp-checkbox').prop('checked', false).prop('disabled', !name);
+	if(name){
+		$('#matrixBody tr[data-name="'+cssEscape(name)+'"] .cmp-checkbox').prop('disabled', true);
+		$('#mobileMatrixList .mp-card[data-name="'+cssEscape(name)+'"] .cmp-checkbox').prop('disabled', true);
+	}
+
 	renderCalendar();
 	renderWorkdaysCard();
+	renderLinksCard();
 	if(name){
 		document.getElementById('calendarGrid').scrollIntoView({behavior:'smooth', block:'nearest'});
 	}
+}
+
+function toggleComparison(name, checked){
+	if(!selectedName || name === selectedName) return;
+	var idx = comparisonNames.indexOf(name);
+	if(checked && idx === -1){
+		comparisonNames.push(name);
+	} else if(!checked && idx !== -1){
+		comparisonNames.splice(idx,1);
+	}
+	$('#matrixBody tr[data-name="'+cssEscape(name)+'"]').toggleClass('cmp-selected', checked);
+	$('#mobileMatrixList .mp-card[data-name="'+cssEscape(name)+'"]').toggleClass('cmp-selected', checked);
+	renderLinksCard();
+}
+
+function removeComparison(name){
+	var idx = comparisonNames.indexOf(name);
+	if(idx !== -1) comparisonNames.splice(idx,1);
+	$('#matrixBody tr[data-name="'+cssEscape(name)+'"] .cmp-checkbox').prop('checked', false);
+	$('#mobileMatrixList .mp-card[data-name="'+cssEscape(name)+'"] .cmp-checkbox').prop('checked', false);
+	$('#matrixBody tr[data-name="'+cssEscape(name)+'"]').removeClass('cmp-selected');
+	$('#mobileMatrixList .mp-card[data-name="'+cssEscape(name)+'"]').removeClass('cmp-selected');
+	renderLinksCard();
+}
+
+/* ---------------- vínculos com outros auditores ---------------- */
+function daysListText(arr){
+	return arr.length ? arr.join(', ') : null;
+}
+
+function renderLinksCard(){
+	var $content = $('#linksContent').empty();
+
+	if(!selectedName){
+		$content.append(
+			'<div class="empty-state"><div class="big">Nenhum auditor base selecionado</div>'+
+			'Selecione um nome na listagem acima para habilitar a comparação com outros auditores.</div>'
+		);
+		return;
+	}
+
+	$content.append(
+		'<div class="links-base-line">Auditor base: <strong>'+selectedName+'</strong></div>'
+	);
+
+	if(comparisonNames.length === 0){
+		$content.append(
+			'<div class="empty-state"><div class="big">Nenhum auditor marcado para comparação</div>'+
+			'Marque a caixa ao lado de um ou mais nomes na listagem acima para comparar com '+selectedName+'.</div>'
+		);
+		return;
+	}
+
+	$content.append(
+		'<div class="legend links-legend">'+
+			'<span class="item"><span class="swatch" style="background:var(--gold-600);"></span> Trabalham juntos</span>'+
+			'<span class="item"><span class="swatch" style="background:var(--danger);"></span> Só '+selectedName.split(' ')[0]+' trabalha</span>'+
+			'<span class="item"><span class="swatch" style="background:var(--navy-700);"></span> Só o(a) comparado(a) trabalha</span>'+
+			'<span class="item"><span class="swatch disabled"></span> Nenhum dos dois</span>'+
+		'</div>'
+	);
+
+	var $grid = $('<div class="links-grid">');
+	var baseSet = DAY_SET_BY_NAME[selectedName];
+
+	comparisonNames.forEach(function(compName){
+		var compSet = DAY_SET_BY_NAME[compName];
+		if(!compSet) return;
+		var together=[], onlyBase=[], onlyComp=[];
+		var $strip = $('<div class="lb-strip">');
+		for(var d=1; d<=DAYS_IN_MONTH; d++){
+			var inBase = !!baseSet[d], inComp = !!compSet[d];
+			var cls, label;
+			if(inBase && inComp){ cls='both'; together.push(d); }
+			else if(inBase && !inComp){ cls='base-only'; onlyBase.push(d); }
+			else if(!inBase && inComp){ cls='comp-only'; onlyComp.push(d); }
+			else { cls='none'; }
+			$strip.append('<span class="lb-dot '+cls+'" title="Dia '+d+'">'+d+'</span>');
+		}
+
+		var $block = $('<div class="link-block">');
+		var $head = $('<div class="lb-head">')
+			.append('<span class="lb-title">'+selectedName+'<span class="vs">×</span>'+compName+'</span>')
+			.append($('<button class="lb-remove">Remover</button>').on('click', function(){ removeComparison(compName); }));
+		var $stats = $('<div class="lb-stats">');
+
+		var togetherTxt = daysListText(together);
+		var onlyBaseTxt = daysListText(onlyBase);
+		var onlyCompTxt = daysListText(onlyComp);
+
+		$stats.append(
+			'<div class="lb-stat both"><h4><span class="sw"></span>Juntos ('+together.length+')</h4>'+
+			(togetherTxt ? '<p>'+togetherTxt+'</p>' : '<p class="none-days">Nenhum dia em comum</p>')+'</div>'
+		);
+		$stats.append(
+			'<div class="lb-stat baseonly"><h4><span class="sw"></span>Só '+selectedName.split(' ')[0]+' ('+onlyBase.length+')</h4>'+
+			(onlyBaseTxt ? '<p>'+onlyBaseTxt+'</p>' : '<p class="none-days">Nenhum dia exclusivo</p>')+'</div>'
+		);
+		$stats.append(
+			'<div class="lb-stat componly"><h4><span class="sw"></span>Só '+compName.split(' ')[0]+' ('+onlyComp.length+')</h4>'+
+			(onlyCompTxt ? '<p>'+onlyCompTxt+'</p>' : '<p class="none-days">Nenhum dia exclusivo</p>')+'</div>'
+		);
+
+		$block.append($head).append($strip).append($stats);
+		$grid.append($block);
+	});
+
+	$content.append($grid);
 }
 
 function cssEscape(s){
@@ -985,6 +1257,7 @@ buildDaySelect();
 renderCalendar();
 renderWorkdaysCard();
 renderDayLookup();
+renderLinksCard();
 
 });
 </script>

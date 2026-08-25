@@ -28,8 +28,9 @@ O projeto é uma ferramenta de consulta pessoal, sem qualquer vínculo instituci
 3. Logo abaixo do calendário, é possível **escolher um dia específico** do mês — pelo seletor "Quem está de plantão em um dia específico" ou clicando diretamente numa data do calendário — para ver, num só quadro, todos os auditores fiscais escalados naquele dia.
 4. Mais abaixo, o **quadro de plantões do auditor selecionado** lista cada dia de trabalho do auditor escolhido na listagem e, para cada data, quais outros auditores da SUMAT também estarão de plantão naquele mesmo dia.
 5. Sem nenhuma seleção, a listagem superior já mostra, para todos os 47 auditores, quais dias do mês são de plantão (vermelho) e quais são de folga (verde).
+6. Com um auditor **base** selecionado, cada outro nome da listagem passa a ter uma caixa de marcação ao lado (na tabela desktop, dentro da própria célula do nome; nos cartões mobile, ao lado do nome). Marque quantos auditores quiser para comparar com a base: um novo quadro, **"Vínculos com outros auditores"**, mostra, para cada comparação, uma faixa visual dos 30 dias do mês e as listas de dias em que ambos trabalham juntos, dias exclusivos da base e dias exclusivos do comparado.
 
-As duas formas de seleção — por auditor e por dia — são independentes e podem ser usadas juntas ou separadamente.
+As formas de seleção — por auditor base, por dia específico e por comparação entre auditores — são complementares e podem ser usadas em conjunto.
 
 ## Dados exibidos
 
