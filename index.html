@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Escalas da SUMAT — Sefaz/RN</title>
+<meta name="description" content="Visualizador não-oficial das escalas de plantão dos novos Auditores Fiscais da SUMAT, Sefaz/RN"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<style>
+:root{
+	--navy-950:#0c1f36;
+	--navy-900:#132c4a;
+	--navy-800:#1b3a63;
+	--navy-700:#274b7d;
+	--green-600:#2e7d4f;
+	--green-700:#256640;
+	--gold-500:#f0b93b;
+	--gold-600:#d99e20;
+	--cream-50:#faf8f3;
+	--cream-100:#f2eee2;
+	--ink-900:#16202c;
+	--ink-600:#4b5768;
+	--ink-400:#79879a;
+	--line:#dcd6c6;
+	--ok-bg:#e9f3ec;
+	--ok-fg:#1e6b40;
+	--danger:#b3432b;
+	--danger-bg:#f7e6e1;
+	--danger-fg:#8a2f1a;
+	--radius:10px;
+	--shadow: 0 1px 2px rgba(15,30,50,.06), 0 8px 24px -12px rgba(15,30,50,.18);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+	margin:0;
+	background:var(--cream-50);
+	color:var(--ink-900);
+	font-family:'Inter',system-ui,sans-serif;
+	font-size:15px;
+	line-height:1.5;
+}
+.num{font-family:'JetBrains Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums;}
+h1,h2,h3{font-family:'Space Grotesk',system-ui,sans-serif; color:var(--navy-950); margin:0 0 .4em;}
+a{color:var(--navy-700);}
+
+/* ---------- header ---------- */
+.topbar{
+	background: linear-gradient(180deg,var(--navy-950),var(--navy-900) 75%);
+	color:#f4f1e6;
+	border-bottom:4px solid var(--gold-500);
+}
+.topbar-inner{
+	max-width:1180px;
+	margin:0 auto;
+	padding:26px 24px 22px;
+	display:flex;
+	align-items:center;
+	gap:22px;
+}
+.topbar img{
+	height:96px;
+	width:auto;
+	filter:drop-shadow(0 6px 14px rgba(0,0,0,.35));
+	flex-shrink:0;
+}
+.topbar .eyebrow{
+	text-transform:uppercase;
+	letter-spacing:.14em;
+	font-size:11.5px;
+	font-weight:600;
+	color:var(--gold-500);
+	margin-bottom:6px;
+}
+.topbar h1{
+	color:#fbf9f2;
+	font-size:26px;
+	margin:0 0 4px;
+	line-height:1.2;
+}
+.topbar p{
+	margin:0;
+	color:#c7cfdb;
+	font-size:13.5px;
+	max-width:64ch;
+}
+
+/* ---------- layout ---------- */
+.wrap{
+	max-width:1180px;
+	margin:0 auto;
+	padding:28px 24px 80px;
+}
+
+.card{
+	background:#fff;
+	border:1px solid var(--line);
+	border-radius:var(--radius);
+	box-shadow:var(--shadow);
+	padding:22px 24px;
+	margin-bottom:22px;
+}
+.card > h2{
+	font-size:16.5px;
+	display:flex;
+	align-items:baseline;
+	gap:8px;
+	border-bottom:1px solid var(--cream-100);
+	padding-bottom:12px;
+	margin-bottom:18px;
+	flex-wrap:wrap;
+}
+.card > h2 .tag{
+	font-family:'JetBrains Mono',monospace;
+	font-size:11px;
+	font-weight:600;
+	color:var(--green-700);
+	background:var(--ok-bg);
+	border-radius:5px;
+	padding:2px 7px;
+	letter-spacing:.03em;
+}
+.card > h2 .sub{
+	font-size:12px;
+	font-weight:500;
+	color:var(--ink-400);
+	margin-left:auto;
+}
+.card > p.lead{
+	color:var(--ink-600);
+	font-size:13.5px;
+	margin:0 0 18px;
+	max-width:80ch;
+}
+
+/* legend chips */
+.legend{display:flex; flex-wrap:wrap; gap:14px; margin-bottom:16px;}
+.legend .item{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--ink-600); font-weight:500;}
+.legend .swatch{width:13px; height:13px; border-radius:3px; display:inline-block;}
+.legend .swatch.on{background:var(--danger);}
+.legend .swatch.off{background:var(--green-600);}
+.legend .swatch.sel{background:var(--gold-500);}
+.legend .swatch.disabled{background:#c7cdd6; border:1px dashed #9aa3b0;}
+
+/* future-attribute chips (greyed out) */
+.chip-disabled{
+	display:inline-flex;
+	align-items:center;
+	gap:5px;
+	font-size:11px;
+	font-weight:600;
+	color:#8b93a0;
+	background:#eceef1;
+	border:1px dashed #c3c9d1;
+	border-radius:20px;
+	padding:4px 10px 4px 8px;
+	cursor:not-allowed;
+	user-select:none;
+	white-space:nowrap;
+}
+.chip-disabled .dot{width:6px; height:6px; border-radius:50%; background:#aab1bd;}
+.chip-disabled:hover{background:#e6e8ec;}
+.filters-row{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:18px;}
+.filters-row .divider{width:1px; height:20px; background:var(--line);}
+
+/* search box */
+.search-box{
+	position:relative;
+	flex:1 1 240px;
+	max-width:320px;
+}
+.search-box input{
+	width:100%;
+	padding:9px 12px 9px 32px;
+	border:1px solid var(--line);
+	border-radius:8px;
+	font-family:'Inter',sans-serif;
+	font-size:13px;
+	background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="%2379879a" stroke-width="2"><circle cx="6" cy="6" r="5"/><line x1="10" y1="10" x2="13.5" y2="13.5"/></svg>') 10px center no-repeat;
+	color:var(--ink-900);
+}
+.search-box input:focus{outline:2px solid var(--navy-700); outline-offset:1px;}
+
+/* ---------- matrix table ---------- */
+.matrix-scroll{
+	overflow-x:auto;
+	border:1px solid var(--line);
+	border-radius:8px;
+}
+table.matrix{
+	border-collapse:collapse;
+	width:100%;
+	min-width:1040px;
+	font-size:11.5px;
+}
+table.matrix thead th{
+	position:sticky;
+	top:0;
+	background:var(--navy-950);
+	color:#e7ebf1;
+	font-family:'JetBrains Mono',monospace;
+	font-weight:600;
+	padding:8px 4px;
+	text-align:center;
+	z-index:2;
+	border-bottom:2px solid var(--gold-500);
+}
+table.matrix thead th.wknd{color:var(--gold-500);}
+table.matrix thead th:first-child{
+	position:sticky;
+	left:0;
+	top:0;
+	z-index:3;
+	text-align:left;
+	padding-left:14px;
+	min-width:230px;
+	background:var(--navy-950);
+}
+table.matrix tbody th{
+	position:sticky;
+	left:0;
+	background:#fff;
+	text-align:left;
+	padding:7px 10px 7px 14px;
+	font-weight:600;
+	font-size:12.5px;
+	color:var(--ink-900);
+	border-right:1px solid var(--line);
+	white-space:nowrap;
+	cursor:pointer;
+	z-index:1;
+	transition:background .12s;
+}
+table.matrix tbody tr:nth-child(even) th{background:var(--cream-50);}
+table.matrix tbody tr:nth-child(even) td{background:var(--cream-50);}
+table.matrix tbody tr:hover th, table.matrix tbody tr:hover td{background:#fdf3d9;}
+table.matrix tbody tr.selected th{background:var(--gold-500); color:var(--navy-950);}
+table.matrix tbody tr.selected td.on{background:var(--danger); box-shadow:inset 0 0 0 1.5px var(--gold-600);}
+table.matrix tbody tr.selected td.off{background:var(--green-600); box-shadow:inset 0 0 0 1.5px var(--gold-600);}
+table.matrix tbody tr.dimmed{opacity:.32;}
+table.matrix td{
+	text-align:center;
+	padding:6px 2px;
+	border-bottom:1px solid var(--cream-100);
+	cursor:pointer;
+}
+table.matrix td .dotcell{
+	width:16px; height:16px; border-radius:4px;
+	margin:0 auto;
+	display:block;
+}
+td.on .dotcell{background:var(--danger);}
+td.off .dotcell{background:var(--green-600); opacity:.28;}
+table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
+.row-count{font-size:11.5px; color:var(--ink-400); margin-top:10px;}
+
+/* ---------- calendar ---------- */
+.cal-head-name{
+	font-family:'Space Grotesk',sans-serif;
+	font-size:14px;
+	font-weight:600;
+	color:var(--navy-800);
+	background:var(--cream-100);
+	border-radius:8px;
+	padding:8px 14px;
+	margin-bottom:16px;
+	display:flex;
+	align-items:center;
+	gap:10px;
+	flex-wrap:wrap;
+}
+.cal-head-name .clear-btn{
+	margin-left:auto;
+	font-size:11.5px;
+	font-weight:600;
+	color:var(--navy-700);
+	background:#fff;
+	border:1px solid var(--line);
+	border-radius:6px;
+	padding:5px 10px;
+	cursor:pointer;
+}
+.cal-head-name .clear-btn:hover{background:var(--cream-50);}
+.cal-head-name.empty{color:var(--ink-400); font-weight:500; font-style:italic;}
+
+.calendar{
+	display:grid;
+	grid-template-columns:repeat(7,1fr);
+	gap:6px;
+}
+.calendar .dow{
+	text-align:center;
+	font-family:'JetBrains Mono',monospace;
+	font-size:11px;
+	font-weight:700;
+	color:var(--ink-400);
+	text-transform:uppercase;
+	letter-spacing:.05em;
+	padding-bottom:6px;
+}
+.calendar .cell{
+	aspect-ratio:1/0.82;
+	border-radius:8px;
+	border:1px solid var(--line);
+	background:#fdfcf9;
+	padding:8px;
+	display:flex;
+	flex-direction:column;
+	justify-content:space-between;
+	min-height:64px;
+}
+.calendar .cell.empty{background:transparent; border:none;}
+.calendar .cell .daynum{
+	font-family:'JetBrains Mono',monospace;
+	font-weight:700;
+	font-size:14px;
+	color:var(--ink-900);
+}
+.calendar .cell .status{
+	font-size:10px;
+	font-weight:600;
+	text-transform:uppercase;
+	letter-spacing:.03em;
+	align-self:flex-start;
+	padding:2px 6px;
+	border-radius:4px;
+}
+.calendar .cell.on{background:var(--danger-bg); border-color:#e2b9ab;}
+.calendar .cell.on .status{background:var(--danger); color:#fff;}
+.calendar .cell.off{background:var(--ok-bg); border-color:#bcdcc7;}
+.calendar .cell.off .status{background:var(--green-600); color:#fff;}
+.calendar .cell.neutral .status{background:#eceef1; color:#8b93a0;}
+@media (max-width:640px){
+	.calendar .cell{min-height:52px; padding:6px;}
+	.calendar .cell .status{font-size:8.5px; padding:1px 4px;}
+}
+
+/* ---------- workday detail cards ---------- */
+.workdays-grid{
+	display:grid;
+	grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+	gap:14px;
+}
+.workday-card{
+	border:1px solid var(--line);
+	border-radius:9px;
+	overflow:hidden;
+	background:#fff;
+}
+.workday-card .wd-date{
+	background:var(--danger);
+	color:#fff;
+	font-family:'JetBrains Mono',monospace;
+	font-weight:700;
+	font-size:13px;
+	padding:8px 12px;
+	display:flex;
+	align-items:center;
+	justify-content:space-between;
+}
+.workday-card .wd-date .badges{display:flex; gap:5px;}
+.workday-card .wd-date .mini-badge{
+	font-size:9px;
+	font-weight:600;
+	background:rgba(255,255,255,.22);
+	border:1px dashed rgba(255,255,255,.55);
+	border-radius:10px;
+	padding:1.5px 6px;
+	text-transform:uppercase;
+	letter-spacing:.02em;
+}
+.workday-card .wd-body{padding:10px 12px 12px;}
+.workday-card .wd-selected{
+	font-size:12.5px;
+	font-weight:700;
+	color:var(--navy-900);
+	padding-bottom:8px;
+	margin-bottom:8px;
+	border-bottom:1px dashed var(--line);
+}
+.workday-card .wd-others-label{
+	font-size:10.5px;
+	font-weight:600;
+	color:var(--ink-400);
+	text-transform:uppercase;
+	letter-spacing:.04em;
+	margin-bottom:5px;
+}
+.workday-card .wd-others{
+	list-style:none;
+	margin:0;
+	padding:0;
+	display:flex;
+	flex-direction:column;
+	gap:3px;
+}
+.workday-card .wd-others li{
+	font-size:12px;
+	color:var(--ink-600);
+}
+.workday-card .wd-others .none{font-style:italic; color:var(--ink-400);}
+
+/* ---------- empty state ---------- */
+.empty-state{
+	text-align:center;
+	padding:36px 20px;
+	color:var(--ink-400);
+	font-size:13.5px;
+}
+.empty-state .big{font-size:15px; color:var(--ink-600); font-weight:600; margin-bottom:6px;}
+
+/* ---------- footer ---------- */
+footer{
+	max-width:1180px;
+	margin:0 auto;
+	padding:0 24px 40px;
+	color:var(--ink-400);
+	font-size:12px;
+	line-height:1.6;
+}
+footer a{color:var(--ink-600);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+	<div class="topbar-inner">
+		<img src="afrelefante.png" alt="Mascote AFRE Sefaz/RN"/>
+		<div>
+			<div class="eyebrow">SUMAT · Sefaz/RN · não-oficial</div>
+			<h1>Escalas da SUMAT da Sefaz/RN</h1>
+			<p>Visualizador não-oficial da escala de plantões de 12h dos novos Auditores Fiscais de Receitas Estaduais (AFRE), lotados na Subcoordenadoria de Malha e Auditoria Tributária (SUMAT).</p>
+		</div>
+	</div>
+</div>
+
+<div class="wrap">
+
+	<!-- ===================== LISTAGEM / MATRIZ ===================== -->
+	<div class="card">
+		<h2>Auditores fiscais e plantões <span class="tag">SET/2026</span><span class="sub">47 servidores</span></h2>
+		<p class="lead">Clique em um nome para selecioná-lo (apenas um por vez). A seleção atualiza o calendário e o quadro de plantões abaixo. Clique novamente para desmarcar.</p>
+
+		<div class="legend">
+			<span class="item"><span class="swatch on"></span> Dia de plantão (12h)</span>
+			<span class="item"><span class="swatch off"></span> Dia de folga</span>
+			<span class="item"><span class="swatch sel"></span> Auditor selecionado</span>
+			<span class="item"><span class="swatch disabled"></span> Atributo ainda não disponível</span>
+		</div>
+
+		<div class="filters-row">
+			<div class="search-box">
+				<input type="text" id="searchInput" placeholder="Buscar auditor pelo nome…" autocomplete="off"/>
+			</div>
+			<div class="divider"></div>
+			<span class="chip-disabled" title="Em breve: cada plantão poderá ser filtrado por turno diurno ou noturno, assim que a informação for cadastrada.">
+				<span class="dot"></span> Filtrar por turno (diurno/noturno) — em breve
+			</span>
+			<span class="chip-disabled" title="Em breve: cada plantão poderá ser filtrado pelo local de trabalho (posto fiscal, aeroporto, correios, etc.), assim que a informação for cadastrada.">
+				<span class="dot"></span> Filtrar por local — em breve
+			</span>
+		</div>
+
+		<div class="matrix-scroll">
+			<table class="matrix" id="matrixTable">
+				<thead><tr id="matrixHeadRow"></tr></thead>
+				<tbody id="matrixBody"></tbody>
+			</table>
+		</div>
+		<div class="row-count" id="rowCount"></div>
+	</div>
+
+	<!-- ===================== CALENDÁRIO ===================== -->
+	<div class="card">
+		<h2>Calendário — Setembro/2026</h2>
+		<div class="cal-head-name empty" id="calHeadName">Nenhum auditor selecionado — selecione um nome na lista acima para colorir o calendário.</div>
+		<div class="calendar" id="calendarGrid"></div>
+	</div>
+
+	<!-- ===================== QUADRO DE PLANTÕES DO SELECIONADO ===================== -->
+	<div class="card" id="workdaysCard">
+		<h2>Dias de plantão do auditor selecionado</h2>
+		<p class="lead">Para cada dia de plantão do auditor selecionado, veja quais outros auditores também estarão de plantão na mesma data.</p>
+		<div id="workdaysContent">
+			<div class="empty-state">
+				<div class="big">Nenhum auditor selecionado</div>
+				Selecione um nome na listagem para ver o detalhamento dos dias de plantão.
+			</div>
+		</div>
+	</div>
+
+</div>
+
+<footer>
+	Projeto independente e não-oficial, sem qualquer vínculo institucional com a Sefaz/RN. Os dados de escala reproduzidos referem-se à escala de setembro/2026 dos novos Auditores Fiscais lotados na SUMAT e podem conter desatualizações em relação a eventuais trocas ou ajustes posteriores. Consulte sempre a escala oficial junto à chefia competente.
+	<br/>Projeto irmão: <a href="https://bacalhaunabrisa.github.io/remunerasefazrn/" target="_blank" rel="noopener">Simulador de Remuneração AFRE</a>.
+</footer>
+
+<script>
+$(function(){
+
+/* =====================================================================
+   DADOS — Escala de setembro/2026, 47 Auditores Fiscais (SUMAT)
+   Cada plantão já está estruturado para futuramente receber "turno"
+   (diurno/noturno) e "local" (posto fiscal, aeroporto, correios, etc.).
+   Por ora, turno e local ficam nulos e a interface os exibe acizentados.
+===================================================================== */
+var YEAR = 2026, MONTH = 9; // setembro
+var DAYS_IN_MONTH = 30;
+
+var RAW_SCHEDULE = [
+ {name:"Alexandre Palhares Leite", days:[2,4,5,7,8,11,15,21,22,28,30]},
+ {name:"Alinne Cristiane Aniceto Medeiros", days:[2,5,10,15,17,19,21,23,25,27,29]},
+ {name:"Amanda Batista Silva Sousa", days:[2,4,6,8,10,14,17,23,25,26,29]},
+ {name:"Andre Feijo Quintela Filho", days:[3,9,11,13,16,18,22,24,27,28,30]},
+ {name:"Antonio Thales Rocha Cidade", days:[2,7,8,10,15,19,21,23,25,27,29]},
+ {name:"Arthur Mindello Zandona", days:[2,4,6,8,10,12,14,17,23,25,29]},
+ {name:"Carlos Andre da Silva Batista de Souza", days:[3,9,11,13,16,18,20,22,24,28,30]},
+ {name:"Caroline Carvalho Fontão", days:[3,5,10,14,15,17,20,21,23,25,27]},
+ {name:"Daniel Lima Oliveira", days:[2,4,6,8,10,12,14,17,23,25,29]},
+ {name:"Danielle Cristina Machado", days:[2,3,4,5,7,24,25,26,28,29,30]},
+ {name:"Estevam Vieira de Freitas Junior", days:[2,9,11,13,16,18,22,24,26,28,30]},
+ {name:"Fabiano Kennedy Lima Fernandes", days:[2,7,8,14,16,18,20,22,23,24,30]},
+ {name:"Fellipe Douglas dos Santos Lima", days:[2,4,8,11,12,14,17,21,23,27,29]},
+ {name:"Francisco Emerson Braga Mendes Junior", days:[3,5,10,15,16,18,19,21,23,25,27]},
+ {name:"Girlian Antonio dos Santos", days:[3,5,8,11,15,17,21,22,24,27,28]},
+ {name:"Gustavo Lins Freire", days:[3,9,11,13,15,16,18,22,26,28,30]},
+ {name:"Jean Silva Zanone", days:[3,9,11,13,16,18,21,24,26,28,30]},
+ {name:"Jorge Washington Oliveira de Morais", days:[2,5,8,10,15,17,20,22,26,28,30]},
+ {name:"Jose Rodolfo Bezerra Mesquita Araujo", days:[2,4,6,8,10,12,14,17,23,25,29]},
+ {name:"José Francisco Gomes", days:[3,7,10,15,17,19,21,23,25,27,29]},
+ {name:"João Antonio Anicacio Moura", days:[2,4,6,8,10,12,14,17,23,25,29]},
+ {name:"Julio Cesar de Paiva Filho", days:[3,6,8,10,12,14,16,18,21,23,25]},
+ {name:"Jônatas Menezes Costa", days:[2,4,6,8,10,14,16,20,23,25,29]},
+ {name:"Larissa Daiana Gomes", days:[4,9,11,15,16,18,19,21,24,27,29]},
+ {name:"Leandro Monteiro do Nascimento", days:[4,9,11,13,15,17,22,24,26,28,30]},
+ {name:"Leonardo Araujo Cronemberger", days:[2,4,6,8,10,12,14,17,23,25,29]},
+ {name:"Lewi Mathias Soares Macedo", days:[3,7,9,10,15,16,19,20,21,24,28]},
+ {name:"Lucas Simoes Borges", days:[2,4,10,12,14,15,19,21,22,29,30]},
+ {name:"Lucas Valenca de Avila Nascimento", days:[2,4,6,8,10,12,14,17,23,25,29]},
+ {name:"Lucas Vidigal Braga", days:[2,4,6,8,10,12,14,17,23,25,29]},
+ {name:"Marcelo Sena da Silva", days:[4,5,8,9,18,19,21,22,24,27,30]},
+ {name:"Marco Antonio de Britto Abla", days:[3,9,11,13,15,16,19,21,23,29,30]},
+ {name:"Marcos Gabriel Ferreira Tomaz", days:[4,9,11,13,15,17,22,24,26,28,30]},
+ {name:"Marila Soares Melo", days:[3,9,11,13,16,18,22,24,26,28,30]},
+ {name:"Mateus Carvalho de Medeiros", days:[4,5,7,9,12,15,17,18,21,22,25]},
+ {name:"Matheus Henrique Welter", days:[3,9,11,15,16,18,20,22,26,28,30]},
+ {name:"Matheus Matos Passos Lima", days:[3,9,13,16,18,19,22,24,26,28,30]},
+ {name:"Mozart Hendel Gomes de Almeida", days:[2,5,8,14,15,16,19,21,22,28,30]},
+ {name:"Rafael Yuri Anselmo Kerges Bueno", days:[3,5,7,9,11,13,16,18,22,24,28]},
+ {name:"Roberto Evelim Penha Borges", days:[3,9,11,14,16,18,20,24,26,28,30]},
+ {name:"Romilson Binas da Silva", days:[3,7,9,11,14,15,18,20,22,24,28]},
+ {name:"Silvio José Vitor Ferreira", days:[2,4,6,8,10,12,14,17,23,25,29]},
+ {name:"Tacio Moura de Souza Almeida", days:[2,4,6,8,10,12,14,17,23,25,29]},
+ {name:"Tarcisio de Macedo Coelho", days:[4,5,7,9,16,18,21,22,24,28,29]},
+ {name:"Thiago Bastos de Melo", days:[3,9,11,13,16,18,20,24,26,28,30]},
+ {name:"Thiago Lima de Freitas Nobre", days:[3,8,11,15,17,18,19,21,25,27,30]},
+ {name:"Walber Willame Barbosa de Moura", days:[3,7,10,11,14,15,17,20,21,24,27]}
+];
+
+/* Estrutura final: cada plantão vira um objeto {d, turno, local}.
+   turno e local ficam null até serem cadastrados futuramente. */
+var SCHEDULE = RAW_SCHEDULE.map(function(p){
+	return {
+		name: p.name,
+		shifts: p.days.map(function(d){
+			return {d:d, turno:null, local:null};
+		})
+	};
+}).sort(function(a,b){ return a.name.localeCompare(b.name,'pt-BR'); });
+
+var DAY_SET_BY_NAME = {};
+SCHEDULE.forEach(function(p){
+	DAY_SET_BY_NAME[p.name] = {};
+	p.shifts.forEach(function(s){ DAY_SET_BY_NAME[p.name][s.d] = s; });
+});
+
+var DOW_LABELS = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
+var selectedName = null;
+
+/* ---------------- matriz ---------------- */
+function buildMatrixHead(){
+	var $row = $('#matrixHeadRow').empty();
+	$row.append('<th>Auditor fiscal</th>');
+	for(var d=1; d<=DAYS_IN_MONTH; d++){
+		var wd = new Date(YEAR, MONTH-1, d).getDay();
+		var wknd = (wd===0||wd===6) ? ' class="wknd"' : '';
+		$row.append('<th'+wknd+'>'+d+'</th>');
+	}
+}
+
+function buildMatrixBody(){
+	var $body = $('#matrixBody').empty();
+	SCHEDULE.forEach(function(p){
+		var $tr = $('<tr>').attr('data-name', p.name);
+		$tr.append($('<th>').text(p.name));
+		for(var d=1; d<=DAYS_IN_MONTH; d++){
+			var on = !!DAY_SET_BY_NAME[p.name][d];
+			var $td = $('<td>').addClass(on?'on':'off').append('<span class="dotcell"></span>');
+			$tr.append($td);
+		}
+		$tr.on('click', function(){
+			var name = $(this).data('name');
+			selectName(selectedName === name ? null : name);
+		});
+		$body.append($tr);
+	});
+	$('#rowCount').text(SCHEDULE.length + ' auditores fiscais listados.');
+}
+
+function applySearchFilter(){
+	var q = $('#searchInput').val().toLowerCase().trim();
+	$('#matrixBody tr').each(function(){
+		var name = ($(this).data('name')+'').toLowerCase();
+		$(this).toggleClass('dimmed', q.length>0 && name.indexOf(q)===-1);
+	});
+}
+
+/* ---------------- calendário ---------------- */
+function buildCalendarShell(){
+	var $grid = $('#calendarGrid').empty();
+	DOW_LABELS.forEach(function(l){ $grid.append('<div class="dow">'+l+'</div>'); });
+	var firstDow = new Date(YEAR, MONTH-1, 1).getDay();
+	for(var i=0;i<firstDow;i++){ $grid.append('<div class="cell empty"></div>'); }
+	for(var d=1; d<=DAYS_IN_MONTH; d++){
+		var $cell = $('<div>').addClass('cell neutral').attr('data-day', d);
+		$cell.append('<span class="daynum">'+d+'</span>');
+		$cell.append('<span class="status">—</span>');
+		$grid.append($cell);
+	}
+}
+
+function renderCalendar(){
+	var $head = $('#calHeadName');
+	if(!selectedName){
+		$head.addClass('empty').html('Nenhum auditor selecionado — selecione um nome na lista acima para colorir o calendário.');
+	} else {
+		$head.removeClass('empty').html(
+			'<span>Exibindo escala de <strong>'+selectedName+'</strong></span>' +
+			'<button class="clear-btn" id="clearSelBtn">Limpar seleção</button>'
+		);
+	}
+
+	$('#calendarGrid .cell[data-day]').each(function(){
+		var d = parseInt($(this).attr('data-day'),10);
+		var $status = $(this).find('.status');
+		$(this).removeClass('on off neutral');
+		if(!selectedName){
+			$(this).addClass('neutral');
+			$status.text('—');
+		} else if(DAY_SET_BY_NAME[selectedName][d]){
+			$(this).addClass('on');
+			$status.text('Plantão');
+		} else {
+			$(this).addClass('off');
+			$status.text('Folga');
+		}
+	});
+}
+
+/* ---------------- quadro de plantões do selecionado ---------------- */
+function renderWorkdaysCard(){
+	var $content = $('#workdaysContent').empty();
+	if(!selectedName){
+		$content.append(
+			'<div class="empty-state"><div class="big">Nenhum auditor selecionado</div>'+
+			'Selecione um nome na listagem para ver o detalhamento dos dias de plantão.</div>'
+		);
+		return;
+	}
+
+	var myDays = Object.keys(DAY_SET_BY_NAME[selectedName]).map(Number).sort(function(a,b){return a-b;});
+	var $grid = $('<div class="workdays-grid">');
+
+	myDays.forEach(function(d){
+		var others = SCHEDULE.filter(function(p){
+			return p.name !== selectedName && DAY_SET_BY_NAME[p.name][d];
+		}).map(function(p){ return p.name; }).sort(function(a,b){return a.localeCompare(b,'pt-BR');});
+
+		var wd = new Date(YEAR, MONTH-1, d).getDay();
+
+		var $card = $('<div class="workday-card">');
+		var $date = $('<div class="wd-date">')
+			.append('<span>'+d+' de setembro <span style="font-weight:400;opacity:.85">('+DOW_LABELS[wd]+')</span></span>')
+			.append('<span class="badges"><span class="mini-badge" title="Turno ainda não cadastrado">turno ?</span><span class="mini-badge" title="Local ainda não cadastrado">local ?</span></span>');
+		var $body = $('<div class="wd-body">');
+		$body.append('<div class="wd-selected">'+selectedName+'</div>');
+		$body.append('<div class="wd-others-label">Também de plantão nesse dia</div>');
+		var $ul = $('<ul class="wd-others">');
+		if(others.length===0){
+			$ul.append('<li class="none">Nenhum outro auditor da lista.</li>');
+		} else {
+			others.forEach(function(n){ $ul.append('<li>'+n+'</li>'); });
+		}
+		$body.append($ul);
+		$card.append($date).append($body);
+		$grid.append($card);
+	});
+
+	$content.append($grid);
+}
+
+/* ---------------- seleção ---------------- */
+function selectName(name){
+	selectedName = name;
+	$('#matrixBody tr').removeClass('selected');
+	if(name){
+		$('#matrixBody tr[data-name="'+cssEscape(name)+'"]').addClass('selected');
+	}
+	renderCalendar();
+	renderWorkdaysCard();
+	if(name){
+		document.getElementById('calendarGrid').scrollIntoView({behavior:'smooth', block:'nearest'});
+	}
+}
+
+function cssEscape(s){
+	return s.replace(/(["\\])/g,'\\$1');
+}
+
+$(document).on('click', '#clearSelBtn', function(){ selectName(null); });
+$('#searchInput').on('input', applySearchFilter);
+
+/* ---------------- init ---------------- */
+buildMatrixHead();
+buildMatrixBody();
+buildCalendarShell();
+renderCalendar();
+renderWorkdaysCard();
+
+});
+</script>
+</body>
+</html>
