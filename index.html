@@ -396,11 +396,22 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 	border-radius:8px;
 	padding:8px 14px;
 	margin-bottom:16px;
+}
+.cal-head-name .chn-row{
 	display:flex;
 	align-items:center;
 	gap:10px;
 	flex-wrap:wrap;
 }
+.cal-head-name .chn-hint{
+	font-family:'Inter',sans-serif;
+	font-weight:400;
+	font-size:11.5px;
+	color:var(--ink-600);
+	margin-top:6px;
+	line-height:1.4;
+}
+.cal-head-name .chn-hint strong{color:var(--navy-800); font-weight:600;}
 .cal-head-name .chn-actions{
 	margin-left:auto;
 	display:flex;
@@ -1002,11 +1013,14 @@ function renderCalendar(){
 		$head.addClass('empty').html('Nenhum auditor selecionado — selecione um nome na lista acima para colorir o calendário.');
 	} else {
 		$head.removeClass('empty').html(
-			'<span>Exibindo escala de <strong>'+selectedName+'</strong></span>' +
-			'<span class="chn-actions">' +
-				'<button class="clear-btn ics-btn" id="downloadIcsBtn">⬇ Baixar plantões (.ics)</button>' +
-				'<button class="clear-btn" id="clearSelBtn">Limpar seleção</button>' +
-			'</span>'
+			'<div class="chn-row">' +
+				'<span>Exibindo escala de <strong>'+selectedName+'</strong></span>' +
+				'<span class="chn-actions">' +
+					'<button class="clear-btn ics-btn" id="downloadIcsBtn">⬇ Baixar plantões (.ics)</button>' +
+					'<button class="clear-btn" id="clearSelBtn">Limpar seleção</button>' +
+				'</span>' +
+			'</div>' +
+			'<div class="chn-hint">O arquivo <strong>.ics</strong> é um formato universal de calendário: baixe e importe-o no <strong>Google Calendar</strong>, <strong>Apple Calendar</strong> (iPhone/Mac) ou <strong>Outlook</strong> para ver os plantões de '+selectedName.split(' ')[0]+' junto com sua agenda.</div>'
 		);
 	}
 
