@@ -29,6 +29,7 @@ O projeto é uma ferramenta de consulta pessoal, sem qualquer vínculo instituci
 4. Mais abaixo, o **quadro de plantões do auditor selecionado** lista cada dia de trabalho do auditor escolhido na listagem e, para cada data, quais outros auditores da SUMAT também estarão de plantão naquele mesmo dia.
 5. Sem nenhuma seleção, a listagem superior já mostra, para todos os 47 auditores, quais dias do mês são de plantão (vermelho) e quais são de folga (verde).
 6. Com um auditor **base** selecionado, cada outro nome da listagem passa a ter uma caixa de marcação ao lado (na tabela desktop, dentro da própria célula do nome; nos cartões mobile, ao lado do nome). Marque quantos auditores quiser para comparar com a base: um novo quadro, **"Vínculos com outros auditores"**, mostra, para cada comparação, uma faixa visual dos 30 dias do mês e as listas de dias em que ambos trabalham juntos, dias exclusivos da base e dias exclusivos do comparado.
+7. Ainda com um auditor selecionado, o botão **"Baixar plantões (.ics)"**, no cabeçalho do calendário, gera e baixa um arquivo `.ics` contendo **apenas os dias de plantão** daquele auditor (sem os dias de folga), pronto para importar no Google Calendar, Apple Calendar, Outlook ou qualquer app compatível com o formato iCalendar.
 
 As formas de seleção — por auditor base, por dia específico e por comparação entre auditores — são complementares e podem ser usadas em conjunto.
 
@@ -54,7 +55,7 @@ Enquanto essas informações não forem cadastradas (`turno`/`local` permanecem 
 
 - **HTML5** — estrutura da página, em arquivo único (`index.html`).
 - **CSS3** puro — sem framework; variáveis CSS (`:root`) para cores/tema, grid/flexbox para o layout responsivo (matriz com rolagem horizontal e calendário empilhável em telas estreitas) e fontes do Google Fonts (*Space Grotesk*, *Inter*, *JetBrains Mono* para dados numéricos), mantendo a mesma identidade visual do projeto irmão.
-- **JavaScript (ES5/ES6)** — dados da escala embutidos no próprio script, montagem dinâmica da matriz, do calendário e do quadro de coincidências, e toda a lógica de seleção/busca.
+- **JavaScript (ES5/ES6)** — dados da escala embutidos no próprio script, montagem dinâmica da matriz, do calendário e do quadro de coincidências, toda a lógica de seleção/busca/comparação, e geração client-side de arquivos `.ics` (via `Blob`/`URL.createObjectURL`, sem qualquer servidor envolvido).
 - **jQuery 3.7** (via CDN) — manipulação do DOM e eventos (`click`/`input`) que disparam a atualização da interface.
 - **GitHub Pages** — hospedagem estática, sem backend, sem build step, sem dependências instaladas: o repositório é publicado como está.
 
