@@ -1115,7 +1115,7 @@ function renderCalendar(){
 					'<button class="clear-btn" id="clearSelBtn">Limpar seleção</button>' +
 				'</span>' +
 			'</div>' +
-			'<div class="chn-hint">O arquivo <strong>.ics</strong> é um formato universal de calendário: baixe e importe-o no <strong>Google Calendar</strong>, <strong>Apple Calendar</strong> (iPhone/Mac) ou <strong>Outlook</strong> para ver os plantões de '+selectedName.split(' ')[0]+' junto com sua agenda.</div>'
+			'<div class="chn-hint">O arquivo <strong>.ics</strong> é um formato universal de calendário: baixe e importe-o no <strong>Google Calendar</strong>, <strong>Apple Calendar</strong> (iPhone/Mac) ou <strong>Outlook</strong> para ver os plantões de '+selectedName.split(' ')[0]+' junto com sua agenda. Nos dias em que o horário já estiver cadastrado, o evento sai com hora exata de início e fim; nos demais, sai como evento de dia inteiro.</div>'
 		);
 	}
 
@@ -1449,6 +1449,33 @@ function icsDateStr(y,m,d){
 	return '' + y + pad2(m) + pad2(d);
 }
 
+/* Regras de horário por turno e local:
+   D: 07:00–19:00 (08:00–20:00 se local NIF)
+   T: 14:00–02:00 (dia seguinte), independente do local
+   N: 19:00–07:00 (dia seguinte); 20:00–08:00 (dia seguinte) se local NIF */
+function shiftTimes(shift){
+	if(!shift || !shift.turno) return null;
+	var isNIF = shift.local === 'NIF';
+	if(shift.turno === 'D'){
+		return isNIF
+			? {sh:8, sm:0, eh:20, em:0, nextDay:false}
+			: {sh:7, sm:0, eh:19, em:0, nextDay:false};
+	}
+	if(shift.turno === 'T'){
+		return {sh:14, sm:0, eh:2, em:0, nextDay:true};
+	}
+	if(shift.turno === 'N'){
+		return isNIF
+			? {sh:20, sm:0, eh:8, em:0, nextDay:true}
+			: {sh:19, sm:0, eh:7, em:0, nextDay:true};
+	}
+	return null;
+}
+
+function icsDateTimeStr(y,m,d,h,mi){
+	return icsDateStr(y,m,d) + 'T' + pad2(h) + pad2(mi) + '00';
+}
+
 function buildICS(name){
 	var days = Object.keys(DAY_SET_BY_NAME[name]).map(Number).sort(function(a,b){return a-b;});
 	var stampDate = new Date();
@@ -1464,16 +1491,34 @@ function buildICS(name){
 	lines.push('X-WR-CALNAME:' + icsEscapeText('Plantões SUMAT — ' + name));
 
 	days.forEach(function(d){
-		var endDay = new Date(YEAR, MONTH-1, d+1); // DTEND exclusivo, dia seguinte
-		var dtstart = icsDateStr(YEAR, MONTH, d);
-		var dtend = icsDateStr(endDay.getFullYear(), endDay.getMonth()+1, endDay.getDate());
+		var shift = DAY_SET_BY_NAME[name][d];
+		var times = shiftTimes(shift);
+
 		lines.push('BEGIN:VEVENT');
-		lines.push('UID:' + dtstart + '-' + slugify(name) + '@sumatsefazrn.bacalhaunabrisa.github.io');
+		lines.push('UID:' + icsDateStr(YEAR,MONTH,d) + '-' + slugify(name) + '@sumatsefazrn.bacalhaunabrisa.github.io');
 		lines.push('DTSTAMP:' + dtstamp);
-		lines.push('DTSTART;VALUE=DATE:' + dtstart);
-		lines.push('DTEND;VALUE=DATE:' + dtend);
-		lines.push('SUMMARY:' + icsEscapeText('Plantão SUMAT — ' + name));
-		lines.push('DESCRIPTION:' + icsEscapeText('Plantão de 12h — Escala da SUMAT, Sefaz/RN (setembro/2026). Ferramenta não-oficial.'));
+
+		var summaryExtra = '';
+		if(shift && (shift.local || shift.turno)){
+			summaryExtra = ' (' + [shift.local, turnoLabel(shift.turno)].filter(Boolean).join(' · ') + ')';
+		}
+
+		if(times){
+			// horário conhecido: evento com hora de início e fim
+			var endDate = times.nextDay ? new Date(YEAR, MONTH-1, d+1) : new Date(YEAR, MONTH-1, d);
+			var dtstart = icsDateTimeStr(YEAR, MONTH, d, times.sh, times.sm);
+			var dtend = icsDateTimeStr(endDate.getFullYear(), endDate.getMonth()+1, endDate.getDate(), times.eh, times.em);
+			lines.push('DTSTART:' + dtstart);
+			lines.push('DTEND:' + dtend);
+		} else {
+			// horário ainda não cadastrado: evento de dia inteiro (dia seguinte é exclusivo)
+			var endDay = new Date(YEAR, MONTH-1, d+1);
+			lines.push('DTSTART;VALUE=DATE:' + icsDateStr(YEAR, MONTH, d));
+			lines.push('DTEND;VALUE=DATE:' + icsDateStr(endDay.getFullYear(), endDay.getMonth()+1, endDay.getDate()));
+		}
+
+		lines.push('SUMMARY:' + icsEscapeText('Plantão SUMAT — ' + name + summaryExtra));
+		lines.push('DESCRIPTION:' + icsEscapeText('Plantão de 12h — Escala da SUMAT, Sefaz/RN (setembro/2026). Ferramenta não-oficial.' + (times ? '' : ' Horário exato ainda não cadastrado para este dia.')));
 		lines.push('TRANSP:OPAQUE');
 		lines.push('END:VEVENT');
 	});

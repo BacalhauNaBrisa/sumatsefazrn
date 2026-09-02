@@ -29,7 +29,17 @@ O projeto é uma ferramenta de consulta pessoal, sem qualquer vínculo instituci
 4. Mais abaixo, o **quadro de plantões do auditor selecionado** lista cada dia de trabalho do auditor escolhido na listagem e, para cada data, quais outros auditores da SUMAT também estarão de plantão naquele mesmo dia.
 5. Sem nenhuma seleção, a listagem superior já mostra, para todos os 47 auditores, quais dias do mês são de plantão (vermelho) e quais são de folga (verde).
 6. Com um auditor **base** selecionado, cada outro nome da listagem passa a ter uma caixa de marcação ao lado (na tabela desktop, dentro da própria célula do nome; nos cartões mobile, ao lado do nome). Marque quantos auditores quiser para comparar com a base: um novo quadro, **"Vínculos com outros auditores"**, mostra, para cada comparação, uma faixa visual dos 30 dias do mês e as listas de dias em que ambos trabalham juntos, dias exclusivos da base e dias exclusivos do comparado.
-7. Ainda com um auditor selecionado, o botão **"Baixar plantões (.ics)"**, no cabeçalho do calendário, gera e baixa um arquivo `.ics` contendo **apenas os dias de plantão** daquele auditor (sem os dias de folga), pronto para importar no Google Calendar, Apple Calendar, Outlook ou qualquer app compatível com o formato iCalendar.
+7. Ainda com um auditor selecionado, o botão **"Baixar plantões (.ics)"**, no cabeçalho do calendário, gera e baixa um arquivo `.ics` contendo **apenas os dias de plantão** daquele auditor (sem os dias de folga), pronto para importar no Google Calendar, Apple Calendar, Outlook ou qualquer app compatível com o formato iCalendar. Nos dias em que já houver turno e local cadastrados, o evento sai com **horário exato de início e fim** (ver regras abaixo); nos demais dias, sai como evento de dia inteiro.
+
+### Regras de horário por turno
+
+| Turno | Início | Fim | Exceção |
+|---|---|---|---|
+| **D** (diurno) | 07:00 | 19:00 | 08:00–20:00 quando o local for exatamente `NIF` |
+| **T** (intermediário) | 14:00 | 02:00 (dia seguinte) | — |
+| **N** (noturno) | 19:00 | 07:00 (dia seguinte) | 20:00–08:00 (dia seguinte) quando o local for exatamente `NIF` |
+
+A exceção do NIF só se aplica quando o local é **exatamente** `NIF` — um local como `NIF VOL`, por exemplo, segue a regra padrão do turno, não a exceção.
 
 As formas de seleção — por auditor base, por dia específico e por comparação entre auditores — são complementares e podem ser usadas em conjunto.
 
