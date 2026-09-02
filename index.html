@@ -532,7 +532,7 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 	align-items:center;
 	justify-content:space-between;
 }
-.workday-card .wd-date .badges{display:flex; gap:5px;}
+.workday-card .wd-date .badges{display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;}
 .workday-card .wd-date .mini-badge{
 	font-size:9px;
 	font-weight:600;
@@ -542,6 +542,13 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 	padding:1.5px 6px;
 	text-transform:uppercase;
 	letter-spacing:.02em;
+	white-space:nowrap;
+}
+.workday-card .wd-date .mini-badge.filled{
+	background:#fff;
+	color:var(--danger-fg);
+	border:1px solid #fff;
+	font-weight:700;
 }
 .workday-card .wd-body{padding:10px 12px 12px;}
 .workday-card .wd-selected{
@@ -573,6 +580,11 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 	color:var(--ink-600);
 }
 .workday-card .wd-others .none{font-style:italic; color:var(--ink-400);}
+.workday-card .wd-others .wd-person-meta{
+	font-size:10.5px;
+	color:var(--ink-400);
+	font-weight:500;
+}
 
 /* ---------- quadro de vínculos entre auditores ---------- */
 .links-base-line{
@@ -876,13 +888,91 @@ var RAW_SCHEDULE = [
  {name:"Walber Willame Barbosa de Moura", days:[3,7,10,11,14,15,17,20,21,24,27]}
 ];
 
+/* Detalhes de turno (D=diurno, T=intermediário/tarde, N=noturno) e local,
+   já apurados para alguns dias a partir das escalas oficiais publicadas.
+   Locais "ECT/TRA..." e "VAN..." são normalizados para "ECT/TRA" e "VAN";
+   locais "VOL ..." são normalizados para o padrão "VOL/XXX". */
+var SHIFT_DETAILS = {
+	2: {
+		"Alinne Cristiane Aniceto Medeiros": {turno:"D", local:"COE"},
+		"Jônatas Menezes Costa": {turno:"D", local:"ECT/TRA"},
+		"Jorge Washington Oliveira de Morais": {turno:"D", local:"ECT/TRA"},
+		"Jose Rodolfo Bezerra Mesquita Araujo": {turno:"D", local:"ECT/TRA"},
+		"Alexandre Palhares Leite": {turno:"N", local:"NIF"},
+		"Daniel Lima Oliveira": {turno:"N", local:"NIF"},
+		"João Antonio Anicacio Moura": {turno:"D", local:"NIF"},
+		"Lucas Valenca de Avila Nascimento": {turno:"D", local:"NIF"},
+		"Antonio Thales Rocha Cidade": {turno:"N", local:"NIF VOL"},
+		"Arthur Mindello Zandona": {turno:"N", local:"NIF VOL"},
+		"Lucas Simoes Borges": {turno:"D", local:"VAN"},
+		"Mozart Hendel Gomes de Almeida": {turno:"D", local:"VAN"},
+		"Silvio José Vitor Ferreira": {turno:"D", local:"VAN"},
+		"Amanda Batista Silva Sousa": {turno:"D", local:"VOL/CLA"},
+		"Danielle Cristina Machado": {turno:"D", local:"VOL/CLA"},
+		"Fabiano Kennedy Lima Fernandes": {turno:"D", local:"VOL/JON"},
+		"Leonardo Araujo Cronemberger": {turno:"D", local:"VOL/JON"},
+		"Estevam Vieira de Freitas Junior": {turno:"D", local:"VOL/ROB"},
+		"Tacio Moura de Souza Almeida": {turno:"D", local:"VOL/ROB"},
+		"Fellipe Douglas dos Santos Lima": {turno:"D", local:"VOL/SAB"},
+		"Lucas Vidigal Braga": {turno:"D", local:"VOL/SAB"}
+	},
+	3: {
+		"Danielle Cristina Machado": {turno:"D", local:"COE"},
+		"Marila Soares Melo": {turno:"D", local:"ECT/TRA"},
+		"Matheus Matos Passos Lima": {turno:"D", local:"ECT/TRA"},
+		"Thiago Lima de Freitas Nobre": {turno:"D", local:"ECT/TRA"},
+		"José Francisco Gomes": {turno:"D", local:"NIF"},
+		"Lewi Mathias Soares Macedo": {turno:"D", local:"NIF"},
+		"Roberto Evelim Penha Borges": {turno:"N", local:"NIF"},
+		"Romilson Binas da Silva": {turno:"N", local:"NIF"},
+		"Walber Willame Barbosa de Moura": {turno:"N", local:"NIF VOL"},
+		"Andre Feijo Quintela Filho": {turno:"N", local:"NIF VOL"},
+		"Caroline Carvalho Fontão": {turno:"D", local:"VAN"},
+		"Gustavo Lins Freire": {turno:"D", local:"VAN"},
+		"Marco Antonio de Britto Abla": {turno:"D", local:"VAN"},
+		"Rafael Yuri Anselmo Kerges Bueno": {turno:"D", local:"VOL/CLA"},
+		"Thiago Bastos de Melo": {turno:"D", local:"VOL/CLA"},
+		"Carlos Andre da Silva Batista de Souza": {turno:"D", local:"VOL/JON"},
+		"Matheus Henrique Welter": {turno:"D", local:"VOL/JON"},
+		"Francisco Emerson Braga Mendes Junior": {turno:"D", local:"VOL/ROB"},
+		"Girlian Antonio dos Santos": {turno:"D", local:"VOL/ROB"},
+		"Jean Silva Zanone": {turno:"D", local:"VOL/SAB"},
+		"Julio Cesar de Paiva Filho": {turno:"D", local:"VOL/SAB"}
+	},
+	4: {
+		"Lucas Simoes Borges": {turno:"D", local:"COE"},
+		"Marcos Gabriel Ferreira Tomaz": {turno:"D", local:"ECT/TRA"},
+		"Alexandre Palhares Leite": {turno:"D", local:"ECT/TRA"},
+		"Amanda Batista Silva Sousa": {turno:"D", local:"ECT/TRA"},
+		"Danielle Cristina Machado": {turno:"D", local:"NIF"},
+		"Leandro Monteiro do Nascimento": {turno:"D", local:"NIF"},
+		"Marcelo Sena da Silva": {turno:"N", local:"NIF"},
+		"Jose Rodolfo Bezerra Mesquita Araujo": {turno:"N", local:"NIF"},
+		"Lucas Valenca de Avila Nascimento": {turno:"N", local:"NIF VOL"},
+		"Larissa Daiana Gomes": {turno:"N", local:"NIF VOL"},
+		"Daniel Lima Oliveira": {turno:"D", local:"VAN"},
+		"João Antonio Anicacio Moura": {turno:"D", local:"VAN"},
+		"Jônatas Menezes Costa": {turno:"D", local:"VAN"},
+		"Silvio José Vitor Ferreira": {turno:"T", local:"VOL/EME"},
+		"Mateus Carvalho de Medeiros": {turno:"T", local:"VOL/EME"},
+		"Tacio Moura de Souza Almeida": {turno:"D", local:"VOL/JON"},
+		"Tarcisio de Macedo Coelho": {turno:"D", local:"VOL/JON"},
+		"Fellipe Douglas dos Santos Lima": {turno:"D", local:"VOL/ROB"},
+		"Lucas Vidigal Braga": {turno:"D", local:"VOL/ROB"},
+		"Arthur Mindello Zandona": {turno:"D", local:"VOL/SAB"},
+		"Leonardo Araujo Cronemberger": {turno:"D", local:"VOL/SAB"}
+	}
+};
+
 /* Estrutura final: cada plantão vira um objeto {d, turno, local}.
-   turno e local ficam null até serem cadastrados futuramente. */
+   turno e local ficam null enquanto não houver dado apurado em SHIFT_DETAILS
+   para aquele dia/pessoa; a interface exibe esses casos acizentados. */
 var SCHEDULE = RAW_SCHEDULE.map(function(p){
 	return {
 		name: p.name,
 		shifts: p.days.map(function(d){
-			return {d:d, turno:null, local:null};
+			var det = (SHIFT_DETAILS[d] && SHIFT_DETAILS[d][p.name]) || null;
+			return {d:d, turno: det ? det.turno : null, local: det ? det.local : null};
 		})
 	};
 }).sort(function(a,b){ return a.name.localeCompare(b.name,'pt-BR'); });
@@ -1044,6 +1134,26 @@ function renderCalendar(){
 }
 
 /* ---------------- quadro de plantões do selecionado ---------------- */
+/* ---------------- helpers de turno/local ---------------- */
+function turnoLabel(t){
+	if(t==='D') return 'Diurno';
+	if(t==='N') return 'Noturno';
+	if(t==='T') return 'Intermediário';
+	return null;
+}
+
+function shiftBadgesHtml(shift){
+	var turnoTxt = shift ? turnoLabel(shift.turno) : null;
+	var localTxt = shift ? shift.local : null;
+	var turnoBadge = turnoTxt
+		? '<span class="mini-badge filled" title="Turno: '+turnoTxt+'">'+turnoTxt+'</span>'
+		: '<span class="mini-badge" title="Turno ainda não cadastrado">turno ?</span>';
+	var localBadge = localTxt
+		? '<span class="mini-badge filled" title="Local: '+localTxt+'">'+localTxt+'</span>'
+		: '<span class="mini-badge" title="Local ainda não cadastrado">local ?</span>';
+	return '<span class="badges">'+turnoBadge+localBadge+'</span>';
+}
+
 function renderWorkdaysCard(){
 	var $content = $('#workdaysContent').empty();
 	if(!selectedName){
@@ -1067,7 +1177,7 @@ function renderWorkdaysCard(){
 		var $card = $('<div class="workday-card">');
 		var $date = $('<div class="wd-date">')
 			.append('<span>'+d+' de setembro <span style="font-weight:400;opacity:.85">('+DOW_LABELS[wd]+')</span></span>')
-			.append('<span class="badges"><span class="mini-badge" title="Turno ainda não cadastrado">turno ?</span><span class="mini-badge" title="Local ainda não cadastrado">local ?</span></span>');
+			.append(shiftBadgesHtml(DAY_SET_BY_NAME[selectedName][d]));
 		var $body = $('<div class="wd-body">');
 		$body.append('<div class="wd-selected">'+selectedName+'</div>');
 		$body.append('<div class="wd-others-label">Também de plantão nesse dia</div>');
@@ -1075,7 +1185,13 @@ function renderWorkdaysCard(){
 		if(others.length===0){
 			$ul.append('<li class="none">Nenhum outro auditor da lista.</li>');
 		} else {
-			others.forEach(function(n){ $ul.append('<li>'+n+'</li>'); });
+			others.forEach(function(n){
+				var s = DAY_SET_BY_NAME[n][d];
+				var metaTxt = s && (s.local || s.turno) ? [s.local, turnoLabel(s.turno)].filter(Boolean).join(' · ') : null;
+				var $li = $('<li>').text(n);
+				if(metaTxt){ $li.append(' <span class="wd-person-meta">('+metaTxt+')</span>'); }
+				$ul.append($li);
+			});
 		}
 		$body.append($ul);
 		$card.append($date).append($body);
@@ -1105,8 +1221,7 @@ function renderDayLookup(){
 
 	var $card = $('<div class="workday-card" style="max-width:420px;">');
 	var $date = $('<div class="wd-date">')
-		.append('<span>'+selectedDay+' de setembro <span style="font-weight:400;opacity:.85">('+DOW_LABELS_LONG[wd]+')</span></span>')
-		.append('<span class="badges"><span class="mini-badge" title="Turno ainda não cadastrado">turno ?</span><span class="mini-badge" title="Local ainda não cadastrado">local ?</span></span>');
+		.append('<span>'+selectedDay+' de setembro <span style="font-weight:400;opacity:.85">('+DOW_LABELS_LONG[wd]+')</span></span>');
 	var $body = $('<div class="wd-body">');
 	$body.append('<div class="wd-others-label">'+onDuty.length+' auditor(es) fiscal(is) de plantão nesse dia</div>');
 	var $ul = $('<ul class="wd-others">');
@@ -1114,7 +1229,10 @@ function renderDayLookup(){
 		$ul.append('<li class="none">Nenhum auditor de plantão nesse dia.</li>');
 	} else {
 		onDuty.forEach(function(n){
+			var s = DAY_SET_BY_NAME[n][selectedDay];
+			var metaTxt = s && (s.local || s.turno) ? [s.local, turnoLabel(s.turno)].filter(Boolean).join(' · ') : null;
 			var li = $('<li>').text(n);
+			if(metaTxt){ li.append(' <span class="wd-person-meta">('+metaTxt+')</span>'); }
 			if(n === selectedName){ li.css('font-weight','700'); }
 			$ul.append(li);
 		});
