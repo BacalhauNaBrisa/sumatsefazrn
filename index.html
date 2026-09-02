@@ -1147,16 +1147,26 @@ function turnoLabel(t){
 	return null;
 }
 
+function timeRangeLabel(shift){
+	var t = shiftTimes(shift);
+	if(!t) return null;
+	return pad2(t.sh)+':'+pad2(t.sm)+' - '+pad2(t.eh)+':'+pad2(t.em);
+}
+
 function shiftBadgesHtml(shift){
 	var turnoTxt = shift ? turnoLabel(shift.turno) : null;
 	var localTxt = shift ? shift.local : null;
+	var timeTxt = shift ? timeRangeLabel(shift) : null;
 	var turnoBadge = turnoTxt
 		? '<span class="mini-badge filled" title="Turno: '+turnoTxt+'">'+turnoTxt+'</span>'
 		: '<span class="mini-badge" title="Turno ainda não cadastrado">turno ?</span>';
 	var localBadge = localTxt
 		? '<span class="mini-badge filled" title="Local: '+localTxt+'">'+localTxt+'</span>'
 		: '<span class="mini-badge" title="Local ainda não cadastrado">local ?</span>';
-	return '<span class="badges">'+turnoBadge+localBadge+'</span>';
+	var timeBadge = timeTxt
+		? '<span class="mini-badge filled" title="Horário: '+timeTxt+'">'+timeTxt+'</span>'
+		: '';
+	return '<span class="badges">'+turnoBadge+localBadge+timeBadge+'</span>';
 }
 
 function renderWorkdaysCard(){
@@ -1198,7 +1208,7 @@ function renderWorkdaysCard(){
 		} else {
 			others.forEach(function(n){
 				var s = DAY_SET_BY_NAME[n][d];
-				var metaTxt = s && (s.local || s.turno) ? [s.local, turnoLabel(s.turno)].filter(Boolean).join(' · ') : null;
+				var metaTxt = s && (s.local || s.turno) ? [s.local, turnoLabel(s.turno), timeRangeLabel(s)].filter(Boolean).join(' · ') : null;
 				var $li = $('<li>').text(n);
 				if(metaTxt){ $li.append(' <span class="wd-person-meta">('+metaTxt+')</span>'); }
 				$ul.append($li);
@@ -1249,7 +1259,7 @@ function renderDayLookup(){
 	} else {
 		onDuty.forEach(function(n){
 			var s = DAY_SET_BY_NAME[n][selectedDay];
-			var metaTxt = s && (s.local || s.turno) ? [s.local, turnoLabel(s.turno)].filter(Boolean).join(' · ') : null;
+			var metaTxt = s && (s.local || s.turno) ? [s.local, turnoLabel(s.turno), timeRangeLabel(s)].filter(Boolean).join(' · ') : null;
 			var li = $('<li>').text(n);
 			if(metaTxt){ li.append(' <span class="wd-person-meta">('+metaTxt+')</span>'); }
 			if(n === selectedName){ li.css('font-weight','700'); }
