@@ -33,6 +33,8 @@
 	--danger:#b3432b;
 	--danger-bg:#f7e6e1;
 	--danger-fg:#8a2f1a;
+	--diff:#8a4baf;
+	--diff-fg:#5f3480;
 	--radius:10px;
 	--shadow: 0 1px 2px rgba(15,30,50,.06), 0 8px 24px -12px rgba(15,30,50,.18);
 }
@@ -655,12 +657,13 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 	.link-block .lb-dot{font-size:8.5px;}
 }
 .link-block .lb-dot.both{background:var(--gold-600);}
+.link-block .lb-dot.diff{background:var(--diff);}
 .link-block .lb-dot.base-only{background:var(--danger);}
 .link-block .lb-dot.comp-only{background:var(--navy-700);}
 .link-block .lb-dot.none{background:#e4e7eb; color:#aab1bd;}
 .link-block .lb-stats{
 	display:grid;
-	grid-template-columns:repeat(3,1fr);
+	grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
 	gap:10px;
 	padding:10px 14px 14px;
 }
@@ -677,9 +680,11 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 	align-items:center;
 	gap:6px;
 }
-.link-block .lb-stat h4 .sw{width:10px; height:10px; border-radius:3px; display:inline-block;}
+.link-block .lb-stat h4 .sw{width:10px; height:10px; border-radius:3px; display:inline-block; flex-shrink:0;}
 .link-block .lb-stat.both h4{color:var(--gold-600);}
 .link-block .lb-stat.both h4 .sw{background:var(--gold-600);}
+.link-block .lb-stat.diffpost h4{color:var(--diff-fg);}
+.link-block .lb-stat.diffpost h4 .sw{background:var(--diff);}
 .link-block .lb-stat.baseonly h4{color:var(--danger-fg);}
 .link-block .lb-stat.baseonly h4 .sw{background:var(--danger);}
 .link-block .lb-stat.componly h4{color:var(--navy-800);}
@@ -776,7 +781,7 @@ footer a{color:var(--ink-600);}
 	<!-- ===================== QUEM TRABALHA EM UM DIA ESPECÍFICO ===================== -->
 	<div class="card" id="dayLookupCard">
 		<h2>Quem está de plantão em um dia específico</h2>
-		<p class="lead">Escolha um dia de setembro/2026 (ou clique num dia do calendário acima) para ver todos os auditores fiscais escalados naquela data.</p>
+		<p class="lead">Escolha um dia de setembro/2026 (ou clique num dia do calendário acima) para ver os auditores fiscais escalados naquela data. Se houver um auditor selecionado na listagem e já houver local/turno cadastrados para esse dia, a lista mostra apenas quem está no mesmo local e turno que ele; caso contrário, mostra todos os escalados no dia.</p>
 
 		<div class="filters-row">
 			<div class="search-box" style="max-width:220px;">
@@ -798,7 +803,7 @@ footer a{color:var(--ink-600);}
 	<!-- ===================== QUADRO DE PLANTÕES DO SELECIONADO ===================== -->
 	<div class="card" id="workdaysCard">
 		<h2>Dias de plantão do auditor selecionado</h2>
-		<p class="lead">Para cada dia de plantão do auditor selecionado, veja quais outros auditores também estarão de plantão na mesma data.</p>
+		<p class="lead">Para cada dia de plantão do auditor selecionado, veja quais outros auditores também estarão de plantão na mesma data — no mesmo local e turno, quando essa informação já estiver cadastrada para o dia; caso contrário, mostra todos que trabalham na mesma data.</p>
 		<div id="workdaysContent">
 			<div class="empty-state">
 				<div class="big">Nenhum auditor selecionado</div>
@@ -810,7 +815,7 @@ footer a{color:var(--ink-600);}
 	<!-- ===================== VÍNCULOS COM OUTROS AUDITORES ===================== -->
 	<div class="card" id="linksCard">
 		<h2>Vínculos com outros auditores</h2>
-		<p class="lead">Com um auditor <strong>base</strong> selecionado na listagem, marque a caixa ao lado de outros nomes (quantos quiser) para comparar plantões: em quais dias trabalham juntos e em quais dias não coincidem.</p>
+		<p class="lead">Com um auditor <strong>base</strong> selecionado na listagem, marque a caixa ao lado de outros nomes (quantos quiser) para comparar plantões: em quais dias trabalham juntos (mesmo local e turno, quando já cadastrados), em quais dias coincidem no calendário mas em locais/turnos diferentes, e em quais dias não coincidem.</p>
 		<div id="linksContent">
 			<div class="empty-state">
 				<div class="big">Nenhum auditor base selecionado</div>
@@ -1168,8 +1173,14 @@ function renderWorkdaysCard(){
 	var $grid = $('<div class="workdays-grid">');
 
 	myDays.forEach(function(d){
+		var baseShift = DAY_SET_BY_NAME[selectedName][d];
+		var filterActive = !!(baseShift && baseShift.turno && baseShift.local);
 		var others = SCHEDULE.filter(function(p){
-			return p.name !== selectedName && DAY_SET_BY_NAME[p.name][d];
+			if(p.name === selectedName) return false;
+			var s = DAY_SET_BY_NAME[p.name][d];
+			if(!s) return false;
+			if(filterActive){ return s.turno === baseShift.turno && s.local === baseShift.local; }
+			return true;
 		}).map(function(p){ return p.name; }).sort(function(a,b){return a.localeCompare(b,'pt-BR');});
 
 		var wd = new Date(YEAR, MONTH-1, d).getDay();
@@ -1177,13 +1188,13 @@ function renderWorkdaysCard(){
 		var $card = $('<div class="workday-card">');
 		var $date = $('<div class="wd-date">')
 			.append('<span>'+d+' de setembro <span style="font-weight:400;opacity:.85">('+DOW_LABELS[wd]+')</span></span>')
-			.append(shiftBadgesHtml(DAY_SET_BY_NAME[selectedName][d]));
+			.append(shiftBadgesHtml(baseShift));
 		var $body = $('<div class="wd-body">');
 		$body.append('<div class="wd-selected">'+selectedName+'</div>');
-		$body.append('<div class="wd-others-label">Também de plantão nesse dia</div>');
+		$body.append('<div class="wd-others-label">'+(filterActive ? 'Também no mesmo local e turno' : 'Também de plantão nesse dia')+'</div>');
 		var $ul = $('<ul class="wd-others">');
 		if(others.length===0){
-			$ul.append('<li class="none">Nenhum outro auditor da lista.</li>');
+			$ul.append('<li class="none">'+(filterActive ? 'Nenhum outro auditor no mesmo local e turno nesse dia.' : 'Nenhum outro auditor da lista.')+'</li>');
 		} else {
 			others.forEach(function(n){
 				var s = DAY_SET_BY_NAME[n][d];
@@ -1215,18 +1226,26 @@ function renderDayLookup(){
 	}
 
 	var wd = new Date(YEAR, MONTH-1, selectedDay).getDay();
+	var baseShift = selectedName ? DAY_SET_BY_NAME[selectedName][selectedDay] : null;
+	var filterActive = !!(baseShift && baseShift.turno && baseShift.local);
 	var onDuty = SCHEDULE.filter(function(p){
-		return !!DAY_SET_BY_NAME[p.name][selectedDay];
+		var s = DAY_SET_BY_NAME[p.name][selectedDay];
+		if(!s) return false;
+		if(filterActive){ return s.turno === baseShift.turno && s.local === baseShift.local; }
+		return true;
 	}).map(function(p){ return p.name; }).sort(function(a,b){return a.localeCompare(b,'pt-BR');});
 
 	var $card = $('<div class="workday-card" style="max-width:420px;">');
 	var $date = $('<div class="wd-date">')
 		.append('<span>'+selectedDay+' de setembro <span style="font-weight:400;opacity:.85">('+DOW_LABELS_LONG[wd]+')</span></span>');
 	var $body = $('<div class="wd-body">');
-	$body.append('<div class="wd-others-label">'+onDuty.length+' auditor(es) fiscal(is) de plantão nesse dia</div>');
+	var labelTxt = filterActive
+		? onDuty.length+' auditor(es) fiscal(is) no mesmo local e turno de '+selectedName.split(' ')[0]
+		: onDuty.length+' auditor(es) fiscal(is) de plantão nesse dia';
+	$body.append('<div class="wd-others-label">'+labelTxt+'</div>');
 	var $ul = $('<ul class="wd-others">');
 	if(onDuty.length===0){
-		$ul.append('<li class="none">Nenhum auditor de plantão nesse dia.</li>');
+		$ul.append('<li class="none">'+(filterActive ? 'Nenhum outro auditor no mesmo local e turno nesse dia.' : 'Nenhum auditor de plantão nesse dia.')+'</li>');
 	} else {
 		onDuty.forEach(function(n){
 			var s = DAY_SET_BY_NAME[n][selectedDay];
@@ -1332,7 +1351,8 @@ function renderLinksCard(){
 
 	$content.append(
 		'<div class="legend links-legend">'+
-			'<span class="item"><span class="swatch" style="background:var(--gold-600);"></span> Trabalham juntos</span>'+
+			'<span class="item"><span class="swatch" style="background:var(--gold-600);"></span> Trabalham juntos (mesmo local/turno, quando cadastrado)</span>'+
+			'<span class="item"><span class="swatch" style="background:var(--diff);"></span> Mesmo dia, local/turno diferentes</span>'+
 			'<span class="item"><span class="swatch" style="background:var(--danger);"></span> Só '+selectedName.split(' ')[0]+' trabalha</span>'+
 			'<span class="item"><span class="swatch" style="background:var(--navy-700);"></span> Só o(a) comparado(a) trabalha</span>'+
 			'<span class="item"><span class="swatch disabled"></span> Nenhum dos dois</span>'+
@@ -1345,12 +1365,20 @@ function renderLinksCard(){
 	comparisonNames.forEach(function(compName){
 		var compSet = DAY_SET_BY_NAME[compName];
 		if(!compSet) return;
-		var together=[], onlyBase=[], onlyComp=[];
+		var together=[], diffPost=[], onlyBase=[], onlyComp=[];
 		var $strip = $('<div class="lb-strip">');
 		for(var d=1; d<=DAYS_IN_MONTH; d++){
-			var inBase = !!baseSet[d], inComp = !!compSet[d];
-			var cls, label;
-			if(inBase && inComp){ cls='both'; together.push(d); }
+			var baseShift = baseSet[d], compShift = compSet[d];
+			var inBase = !!baseShift, inComp = !!compShift;
+			var cls;
+			if(inBase && inComp){
+				var baseHasData = !!(baseShift.turno && baseShift.local);
+				if(baseHasData && (compShift.turno !== baseShift.turno || compShift.local !== baseShift.local)){
+					cls='diff'; diffPost.push(d);
+				} else {
+					cls='both'; together.push(d);
+				}
+			}
 			else if(inBase && !inComp){ cls='base-only'; onlyBase.push(d); }
 			else if(!inBase && inComp){ cls='comp-only'; onlyComp.push(d); }
 			else { cls='none'; }
@@ -1364,6 +1392,7 @@ function renderLinksCard(){
 		var $stats = $('<div class="lb-stats">');
 
 		var togetherTxt = daysListText(together);
+		var diffTxt = daysListText(diffPost);
 		var onlyBaseTxt = daysListText(onlyBase);
 		var onlyCompTxt = daysListText(onlyComp);
 
@@ -1371,6 +1400,12 @@ function renderLinksCard(){
 			'<div class="lb-stat both"><h4><span class="sw"></span>Juntos ('+together.length+')</h4>'+
 			(togetherTxt ? '<p>'+togetherTxt+'</p>' : '<p class="none-days">Nenhum dia em comum</p>')+'</div>'
 		);
+		if(diffPost.length > 0){
+			$stats.append(
+				'<div class="lb-stat diffpost"><h4><span class="sw"></span>Mesmo dia, local/turno diferentes ('+diffPost.length+')</h4>'+
+				'<p>'+diffTxt+'</p></div>'
+			);
+		}
 		$stats.append(
 			'<div class="lb-stat baseonly"><h4><span class="sw"></span>Só '+selectedName.split(' ')[0]+' ('+onlyBase.length+')</h4>'+
 			(onlyBaseTxt ? '<p>'+onlyBaseTxt+'</p>' : '<p class="none-days">Nenhum dia exclusivo</p>')+'</div>'
