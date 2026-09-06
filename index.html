@@ -168,6 +168,42 @@ a{color:var(--navy-700);}
 }
 .chip-disabled .dot{width:6px; height:6px; border-radius:50%; background:#aab1bd;}
 .chip-disabled:hover{background:#e6e8ec;}
+
+/* ---------- chips de local (Plantões por local) ---------- */
+.locals-chips{
+	display:flex;
+	flex-wrap:wrap;
+	gap:8px;
+	margin-bottom:18px;
+}
+.local-chip{
+	display:inline-flex;
+	align-items:center;
+	gap:6px;
+	font-family:'JetBrains Mono',monospace;
+	font-size:12px;
+	font-weight:700;
+	color:var(--navy-800);
+	background:#fff;
+	border:1px solid var(--line);
+	border-radius:20px;
+	padding:6px 12px;
+	cursor:pointer;
+	transition:background .12s, border-color .12s, color .12s;
+}
+.local-chip .cnt{
+	font-family:'Inter',sans-serif;
+	font-weight:600;
+	font-size:10.5px;
+	color:var(--ink-400);
+}
+.local-chip:hover{background:var(--cream-50); border-color:var(--navy-700);}
+.local-chip.active{
+	background:var(--navy-800);
+	border-color:var(--navy-800);
+	color:#fff;
+}
+.local-chip.active .cnt{color:#cfd9e8;}
 .filters-row{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:18px;}
 .filters-row .divider{width:1px; height:20px; background:var(--line);}
 
@@ -367,11 +403,31 @@ table.matrix tbody tr:hover td.off .dotcell{opacity:.55;}
 		white-space:nowrap;
 		flex-shrink:0;
 	}
+	.mp-toggle{
+		flex-shrink:0;
+		width:26px;
+		height:26px;
+		border-radius:50%;
+		border:1px solid var(--line);
+		background:#fff;
+		color:var(--navy-700);
+		font-size:13px;
+		line-height:1;
+		cursor:pointer;
+		display:flex;
+		align-items:center;
+		justify-content:center;
+		transition:transform .15s, background .12s;
+	}
+	.mp-toggle:hover{background:var(--cream-50);}
+	.mp-card.expanded .mp-toggle{transform:rotate(180deg);}
 	.mp-days{
-		display:grid;
+		display:none;
 		grid-template-columns:repeat(6,1fr);
 		gap:4px;
+		margin-top:9px;
 	}
+	.mp-card.expanded .mp-days{display:grid;}
 	.mp-day{
 		aspect-ratio:1/1;
 		border-radius:5px;
@@ -765,9 +821,22 @@ footer a{color:var(--ink-600);}
 				<tbody id="matrixBody"></tbody>
 			</table>
 		</div>
-		<div class="mobile-hint">👆 toque num nome para selecioná-lo</div>
+		<div class="mobile-hint">👆 toque num nome para selecioná-lo · toque na seta ▾ para ver o mini-calendário</div>
 		<div id="mobileMatrixList"></div>
 		<div class="row-count" id="rowCount"></div>
+	</div>
+
+	<!-- ===================== PLANTÕES POR LOCAL ===================== -->
+	<div class="card" id="localsCard">
+		<h2>Plantões por local</h2>
+		<p class="lead">Clique em um local para ver todos os dias, turnos e auditores fiscais escalados naquele posto em setembro/2026.</p>
+		<div id="localsChips" class="locals-chips"></div>
+		<div id="localsContent">
+			<div class="empty-state">
+				<div class="big">Nenhum local selecionado</div>
+				Clique em um dos locais acima para ver a escala completa daquele posto.
+			</div>
+		</div>
 	</div>
 
 	<!-- ===================== CALENDÁRIO ===================== -->
@@ -1102,6 +1171,20 @@ var DOW_LABELS_LONG = ["domingo","segunda-feira","terça-feira","quarta-feira","
 var selectedName = null;
 var selectedDay = null;
 var comparisonNames = [];
+var selectedLocal = null;
+
+/* lista de todos os locais distintos já cadastrados, com contagem de plantões */
+var ALL_LOCALS = (function(){
+	var counts = {};
+	SCHEDULE.forEach(function(p){
+		p.shifts.forEach(function(s){
+			if(s.local){ counts[s.local] = (counts[s.local] || 0) + 1; }
+		});
+	});
+	return Object.keys(counts).sort(function(a,b){ return a.localeCompare(b,'pt-BR'); }).map(function(local){
+		return {local:local, count:counts[local]};
+	});
+})();
 
 /* ---------------- matriz ---------------- */
 function buildMatrixHead(){
@@ -1152,9 +1235,15 @@ function buildMobileMatrix(){
 				toggleComparison(p.name, $(this).is(':checked'));
 			});
 		var $nameWrap = $('<span class="mp-name-wrap">').append($cb).append('<span class="mp-name">'+p.name+'</span>');
+		var $toggle = $('<button type="button" class="mp-toggle" aria-label="Expandir ou recolher o mini-calendário">▾</button>')
+			.on('click', function(e){
+				e.stopPropagation();
+				$(this).closest('.mp-card').toggleClass('expanded');
+			});
 		var $head = $('<div class="mp-head">')
 			.append($nameWrap)
-			.append('<span class="mp-count">'+p.shifts.length+' plantões</span>');
+			.append('<span class="mp-count">'+p.shifts.length+' plantões</span>')
+			.append($toggle);
 		var $days = $('<div class="mp-days">');
 		for(var d=1; d<=DAYS_IN_MONTH; d++){
 			var on = !!DAY_SET_BY_NAME[p.name][d];
@@ -1389,6 +1478,86 @@ function selectDay(day){
 	if(day){
 		document.getElementById('dayLookupCard').scrollIntoView({behavior:'smooth', block:'nearest'});
 	}
+}
+
+/* ---------------- plantões por local ---------------- */
+function buildLocalsChips(){
+	var $chips = $('#localsChips').empty();
+	ALL_LOCALS.forEach(function(item){
+		var $chip = $('<button type="button" class="local-chip">')
+			.attr('data-local', item.local)
+			.append('<span>'+item.local+'</span>')
+			.append('<span class="cnt">('+item.count+')</span>');
+		$chip.on('click', function(){
+			var loc = $(this).attr('data-local');
+			selectLocal(selectedLocal === loc ? null : loc);
+		});
+		$chips.append($chip);
+	});
+}
+
+function selectLocal(local){
+	selectedLocal = local;
+	$('#localsChips .local-chip').removeClass('active');
+	if(local){
+		$('#localsChips .local-chip[data-local="'+cssEscape(local)+'"]').addClass('active');
+	}
+	renderLocalsCard();
+	if(local){
+		document.getElementById('localsCard').scrollIntoView({behavior:'smooth', block:'nearest'});
+	}
+}
+
+function renderLocalsCard(){
+	var $content = $('#localsContent').empty();
+
+	if(!selectedLocal){
+		$content.append(
+			'<div class="empty-state"><div class="big">Nenhum local selecionado</div>'+
+			'Clique em um dos locais acima para ver a escala completa daquele posto.</div>'
+		);
+		return;
+	}
+
+	// agrupa por dia todas as pessoas escaladas nesse local
+	var byDay = {};
+	SCHEDULE.forEach(function(p){
+		p.shifts.forEach(function(s){
+			if(s.local === selectedLocal){
+				if(!byDay[s.d]) byDay[s.d] = [];
+				byDay[s.d].push({name:p.name, turno:s.turno});
+			}
+		});
+	});
+	var days = Object.keys(byDay).map(Number).sort(function(a,b){return a-b;});
+
+	$content.append(
+		'<div class="links-base-line">Local: <strong>'+selectedLocal+'</strong> — '+days.length+' dia(s) com plantão cadastrado neste posto</div>'
+	);
+
+	var $grid = $('<div class="workdays-grid">');
+	days.forEach(function(d){
+		var wd = new Date(YEAR, MONTH-1, d).getDay();
+		var people = byDay[d].sort(function(a,b){ return a.name.localeCompare(b.name,'pt-BR'); });
+
+		var $card = $('<div class="workday-card">');
+		var $date = $('<div class="wd-date">')
+			.append('<span>'+d+' de setembro <span style="font-weight:400;opacity:.85">('+DOW_LABELS[wd]+')</span></span>');
+		var $body = $('<div class="wd-body">');
+		$body.append('<div class="wd-others-label">'+people.length+' auditor(es) fiscal(is)</div>');
+		var $ul = $('<ul class="wd-others">');
+		people.forEach(function(person){
+			var shift = DAY_SET_BY_NAME[person.name][d];
+			var metaTxt = [turnoLabel(person.turno), timeRangeLabel(shift)].filter(Boolean).join(' · ');
+			var $li = $('<li>').text(person.name);
+			if(metaTxt){ $li.append(' <span class="wd-person-meta">('+metaTxt+')</span>'); }
+			$ul.append($li);
+		});
+		$body.append($ul);
+		$card.append($date).append($body);
+		$grid.append($card);
+	});
+	$content.append($grid);
 }
 
 function selectName(name){
@@ -1668,12 +1837,14 @@ $('#searchInput').on('input', applySearchFilter);
 buildMatrixHead();
 buildMatrixBody();
 buildMobileMatrix();
+buildLocalsChips();
 buildCalendarShell();
 buildDaySelect();
 renderCalendar();
 renderWorkdaysCard();
 renderDayLookup();
 renderLinksCard();
+renderLocalsCard();
 
 });
 </script>
